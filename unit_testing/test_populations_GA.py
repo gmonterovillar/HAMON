@@ -1,8 +1,10 @@
 import unittest
 import sys
 import random
+import os
 
-sys.path.append('../src')
+dirname, filename = os.path.split(os.path.abspath(__file__))
+sys.path.append(dirname + '/../src')
 
 import populations
 
