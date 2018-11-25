@@ -108,9 +108,30 @@ class TestIndividual(unittest.TestCase):
         variables_2 = [0.45161290322580644, 0.4838709677419355, -4.903225806451613, 14]
 
         for i in range(self.n_var):
-            
             self.assertAlmostEqual(variables_1[i], indv_integer_1.getVar()[i], places=3)
             self.assertAlmostEqual(variables_2[i], indv_integer_2.getVar()[i], places=3)
+
+    def test_individual_DE_with_random_generation(self):
+        individual_de_1 = individual.IndividualDE(self.n_var, self.var_range, self.n_of, self.n_lim)
+        individual_de_2 = individual.IndividualDE(self.n_var, self.var_range, self.n_of, self.n_lim)
+
+        variables_1 = [0.9925, 2.7297, -4.8791, 13.1313]
+        variables_2 = [0.7214, 1.9115, -4.0635, 13.4085]
+
+        for i in range(self.n_var):
+            self.assertAlmostEqual(variables_1[i], individual_de_1.getVar()[i], places=3)
+            self.assertAlmostEqual(variables_2[i], individual_de_2.getVar()[i], places=3)
+
+    def test_individual_DE_integer_var(self):
+        individual_de_1 = individual.IndividualDEIntegerVar(self.n_var, self.var_range, self.n_of, self.n_lim, [2])
+        individual_de_2 = individual.IndividualDEIntegerVar(self.n_var, self.var_range, self.n_of, self.n_lim, [0])
+
+        variables_1 = [0.9925, 2.7297, -5, 13.1313]
+        variables_2 = [1, 1.9115, -4.0635, 13.4085]
+
+        for i in range(self.n_var):
+            self.assertAlmostEqual(variables_1[i], individual_de_1.getVar()[i], places=3)
+            self.assertAlmostEqual(variables_2[i], individual_de_2.getVar()[i], places=3)
 
 
 if __name__ == '__main__':
