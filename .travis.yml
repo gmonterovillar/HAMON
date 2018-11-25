@@ -3,4 +3,4 @@ python:
  - "3.6"
 cache: pip
 install: "pip install numpy"
-script: python unit_testing/test_individual.py  
+script: cd unit_testing/; python -m unittest -v  
