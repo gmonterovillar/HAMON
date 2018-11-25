@@ -65,8 +65,10 @@ class PopulationGA(Population):
         """Select one random individuals of the population using tournament selection of size two"""
         i1 = random.randint(0, self._size - 1)
         i2 = random.randint(0, self._size - 1)
-        bool1 = self.population[i1].feasibility
-        bool2 = self.population[i2].feasibility
+        while i2 == i1:
+            i2 = random.randint(0, self._size - 1)
+        bool1 = self.population[i1].getFeasibility()
+        bool2 = self.population[i2].getFeasibility()
         fit1 = self.population[i1].getOf()[0]
         fit2 = self.population[i2].getOf()[0]
         if bool1 > bool2:
