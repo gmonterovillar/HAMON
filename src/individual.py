@@ -60,6 +60,12 @@ class Individual:
                 fLim = lim_functions[i]
                 self._lim_var[i] = fLim(*self._var)
 
+    def getCrowdedDistance(self):
+        return self._crowded_dist
+
+    def setCrowdedDistance(self, crowded_dist):
+        self._crowded_dist = crowded_dist
+
     def getLim(self):
         return self._lim_var
 
@@ -89,8 +95,14 @@ class Individual:
     def getFeasibility(self):
         return self._feasibility
 
+    def setFeasibility(self, feasibility):
+        self._feasibility = feasibility
+
     def getRank(self):
         return self._rank
+
+    def setRank(self, rank):
+        self._rank = rank
 
     def _zeros(self, n):
         """Create a list containing n zeros"""

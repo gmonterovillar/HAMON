@@ -36,6 +36,9 @@ class TestPopulationGA(unittest.TestCase):
         self.pop = populations.PopulationGA(self.pop_size, self.n_var, self.n_gen_var, self.n_of, self.n_lim)
         self.pop.initialize()
 
+    def tearDown(self):
+        del self.pop
+
     def test_population_GA_with_random_generation(self):
         chromosomes_individuals = [[0, 1, 1, 0, 0, 0, 1, 1, 0, 0],
                                    [1, 0, 1, 0, 0, 1, 0, 1, 1, 0],

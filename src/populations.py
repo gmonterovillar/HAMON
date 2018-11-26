@@ -122,10 +122,9 @@ class PopulationGAIntegerVar(PopulationGA):
 class PopulationMOEA:
 
     def crowdedDistance(self, population, ranking_list_f, ranking_list_nf):
-        """Assign the crowded distance to every individual to see how packed it's area
-        in the design space is."""
+        """Assign the crowded distance to every individual to see how crowded it's area in the design space is."""
         for i in range(len(population)):
-            population[i].crowded_dist = 0
+            population[i].setCrowdedDistance(0.)
 
         for of in range(self._n_of):
             for num in range(2):
@@ -147,21 +146,19 @@ class PopulationMOEA:
                     tupple_sorted = sorted(tupple_set, key=lambda x: x[1])
 
                     for i in range(l):
-                        crowded_dist_list[tupple_sorted[i][0]] = population[tupple_sorted[i][0]].crowded_dist
+                        crowded_dist_list[tupple_sorted[i][0]] = population[tupple_sorted[i][2]].getCrowdedDistance()
 
                     for i in range(l):
                         if i == 0 or i == l - 1:
-                            population[tupple_sorted[i][2]].crowded_dist = float('inf')
+                            population[tupple_sorted[i][2]].setCrowdedDistance(float('inf'))
                         else:
                             if not tupple_sorted[0][1] - tupple_sorted[l - 1][1]:
-                                population[tupple_sorted[i][2]].crowded_dist = float('inf')
+                                population[tupple_sorted[i][2]].setCrowdedDistance(float('inf'))
                             else:
-                                population[tupple_sorted[i][2]].crowded_dist = crowded_dist_list[tupple_sorted[i][0]] + \
-                                                                               (tupple_sorted[i + 1][1] -
-                                                                                tupple_sorted[i - 1][1]) / abs(
-                                                                                   tupple_sorted[0][1] -
-                                                                                   tupple_sorted[l - 1][1])
-                                crowded_dist_list[tupple_sorted[i][0]] = population[tupple_sorted[i][0]].crowded_dist
+                                population[tupple_sorted[i][2]].setCrowdedDistance(
+                                    crowded_dist_list[tupple_sorted[i][0]] + (tupple_sorted[i + 1][1] -
+                                    tupple_sorted[i - 1][1]) / abs(tupple_sorted[0][1] -tupple_sorted[l - 1][1]))
+                                crowded_dist_list[tupple_sorted[i][0]] = population[tupple_sorted[i][2]].getCrowdedDistance()
 
     def crowdedDistanceOneSet(self, set, n_of):
         """Compute the crowded distance for every individual in one set"""
@@ -172,7 +169,7 @@ class PopulationMOEA:
             crowded_dist_list.append(0)
 
         for i in range(l):
-            set[i].crowded_dist = 0
+            set[i].setCrowdedDistance(0.)
         for objFunct in range(n_of):
             tupple_set = []
             for i in range(l):
@@ -180,23 +177,19 @@ class PopulationMOEA:
             tupple_sorted = sorted(tupple_set, key=lambda x: x[1])
 
             for i in range(l):
-                crowded_dist_list[tupple_sorted[i][0]] = set[tupple_sorted[i][0]].crowded_dist
+                crowded_dist_list[tupple_sorted[i][0]] = set[tupple_sorted[i][0]].getCrowdedDistance()
 
             for i in range(l):
                 if i == 0 or i == l - 1:
-                    set[tupple_sorted[i][0]].crowded_dist = float('inf')
+                    set[tupple_sorted[i][0]].setCrowdedDistance(float('inf'))
                 else:
                     if not tupple_sorted[0][1] - tupple_sorted[l - 1][1]:
-                        set[tupple_sorted[i][0]].crowded_dist = float('inf')
+                        set[tupple_sorted[i][0]].setCrowdedDistance(float('inf'))
                     else:
-                        set[tupple_sorted[i][0]].crowded_dist = crowded_dist_list[tupple_sorted[i][0]] + (tupple_sorted[
-                                                                                                              i + 1][
-                                                                                                              1] - \
-                                                                                                          tupple_sorted[
-                                                                                                              i - 1][
-                                                                                                              1]) / abs(
-                            tupple_sorted[0][1] - tupple_sorted[l - 1][1])
-                        crowded_dist_list[tupple_sorted[i][0]] = set[tupple_sorted[i][0]].crowded_dist
+                        set[tupple_sorted[i][0]].setCrowdedDistance(crowded_dist_list[tupple_sorted[i][0]] +
+                            (tupple_sorted[i + 1][1] - tupple_sorted[i - 1][1]) / abs(tupple_sorted[0][1] -
+                            tupple_sorted[l - 1][1]))
+                        crowded_dist_list[tupple_sorted[i][0]] = set[tupple_sorted[i][0]].getCrowdedDistance()
 
         return set
 
@@ -204,12 +197,12 @@ class PopulationMOEA:
         """Fast-non-dominated-sort --> assigns a rank value to every individual"""
         pop = population[:]
         for i in range(len(pop)):
-            pop[i].rank = 0
+            pop[i].setRank(0)
         rank = 1
         Fi = []
         rank_list = []
         for p in range(len(pop)):
-            pop[p].crowded_dist = [[], 0]
+            pop[p].setCrowdedDistance([[], 0])
             Sp = []
             np = 0
             for q in range(len(pop)):
@@ -218,30 +211,32 @@ class PopulationMOEA:
                 elif self._dominates(pop[q].getOf(), pop[p].getOf(), max_min):
                     np = np + 1
             if not np:
-                population[p].rank = rank
+                population[p].setRank(rank)
                 Fi.append(p)
-            pop[p].crowded_dist[1] = np
-            pop[p].crowded_dist[0] = Sp[:]
+            x = [Sp[:], np]
+            pop[p].setCrowdedDistance(x)
         crowded_dist = []
         for i in range(len(pop)):
-            crowded_dist.append(pop[i].crowded_dist[1])
+            crowded_dist.append(pop[i].getCrowdedDistance()[1])
 
         while len(Fi) > 0:
             rank_list.append(Fi)
             Q = []
             for p in Fi:
-                Sp = pop[p].crowded_dist[0][:]
+                Sp = pop[p].getCrowdedDistance()[0][:]
                 for q in Sp:
-                    pop[q].crowded_dist[1] = crowded_dist[q] - 1
-                    crowded_dist[q] = pop[q].crowded_dist[1]
-                    if not pop[q].crowded_dist[1]:
-                        pop[q].rank = rank + 1
+                    x = pop[q].getCrowdedDistance()
+                    x[1] = crowded_dist[q] - 1
+                    pop[q].setCrowdedDistance(x)
+                    crowded_dist[q] = pop[q].getCrowdedDistance()[1]
+                    if not pop[q].getCrowdedDistance()[1]:
+                        pop[q].setRank(rank + 1)
                         Q.append(q)
             rank = rank + 1
             Fi = Q[:]
         for i in range(len(pop)):
             population[i] = pop[i]
-            population[i].crowded_dist = 0
+            population[i].setCrowdedDistance(0.)
 
         return [population, rank_list]
 
@@ -386,7 +381,7 @@ class PopulationMOEA:
         if n_nf > 0:
             for rank_I_list in rank_list_nfpq:
                 crowded_set1 = self.crowdedDistanceOneSet(list(self.populationPQ[j] for j in rank_I_list), self._n_of)
-                crowded_set_sorted1 = sorted(crowded_set1, key=lambda x: x.crowded_dist, reverse=True)
+                crowded_set_sorted1 = sorted(crowded_set1, key=lambda x: x.getCrowdedDistance(), reverse=True)
                 if (len(crowded_set_sorted1) <= n_nf):
                     self.population += crowded_set_sorted1
                     n_nf -= len(crowded_set_sorted1)
@@ -399,7 +394,7 @@ class PopulationMOEA:
 
         # Fill the rest of the population with ranking 1to fill the perc_rank1 criteria if posible
         crowded_set2 = self.crowdedDistanceOneSet(list(self.populationPQ[j] for j in rank_list_fpq[0]), self._n_of)
-        crowded_set_sorted2 = sorted(crowded_set2, key=lambda x: x.crowded_dist, reverse=True)
+        crowded_set_sorted2 = sorted(crowded_set2, key=lambda x: x.getCrowdedDistance(), reverse=True)
         if len(crowded_set_sorted2) <= n_rank1:
             self.population += crowded_set_sorted2
         else:
@@ -411,7 +406,7 @@ class PopulationMOEA:
             for rank_I_list in rank_list_fpq[1:]:
                 indv_needed = self._size - len(self.population)
                 crowded_set3 = self.crowdedDistanceOneSet(list(self.populationPQ[j] for j in rank_I_list), self._n_of)
-                crowded_set_sorted3 = sorted(crowded_set3, key=lambda x: x.crowded_dist, reverse=True)
+                crowded_set_sorted3 = sorted(crowded_set3, key=lambda x: x.getCrowdedDistance(), reverse=True)
                 if (len(crowded_set_sorted3) <= indv_needed):
                     self.population += crowded_set_sorted3
                 else:
@@ -464,7 +459,7 @@ class PopulationMOEA:
                     indv_line += '%s,  ' % (str(self.population[i].getOf()[j]))
                 for j in range(self._n_lim):
                     indv_line += '%sf,  ' % (str(self.population[i].getLimVar()[j]))
-                indv_line += '%d,  %s' % (self.population[i].rank, self.population[i].getFeasibility())
+                indv_line += '%d,  %s' % (self.population[i].getRank(), self.population[i].getFeasibility())
                 output.write(indv_line + '\n')
 
         else:
@@ -489,10 +484,10 @@ class PopulationsMOGA(PopulationGA, PopulationMOEA):
         """Select one random individuals of the population using tournament selection of size two"""
         i1 = random.randint(0, self._size - 1)
         i2 = random.randint(0, self._size - 1)
-        rank1 = self.population[i1].rank
-        rank2 = self.population[i2].rank
-        bool1 = self.population[i1].feasibility
-        bool2 = self.population[i2].feasibility
+        rank1 = self.population[i1].getRank()
+        rank2 = self.population[i2].getRank()
+        bool1 = self.population[i1].getFeasibility()
+        bool2 = self.population[i2].getFEasibility()
         if bool1 > bool2:
             best = i1
         elif bool2 > bool1:
@@ -503,8 +498,8 @@ class PopulationsMOGA(PopulationGA, PopulationMOEA):
             best = i2
         else:
             # TODO check how non feasible individuals are compared
-            crowded_dist1 = self.population[i1].crowded_dist
-            crowded_dist2 = self.population[i2].crowded_dist
+            crowded_dist1 = self.population[i1].getCrowdedDistance()
+            crowded_dist2 = self.population[i2].getCrowdedDistance()
             if crowded_dist2 > crowded_dist1:
                 best = i2
             else:
@@ -672,11 +667,11 @@ class PopulationPostMOEA(Population, PopulationMOEA):
         print(data_base.shape)
         for i in range(self._size):
             if self._n_lim>0:
-                lim_var = data_base[i,-self._n_lim:].tolist()
+                lim_var = data_base[i, -self._n_lim:].tolist()
             else:
                 lim_var = 0
-            ofs = data_base[i,-self._n_lim-self._n_of:].tolist()
-            vars = data_base[i,1:-self._n_lim-self._n_of].tolist()
+            ofs = data_base[i, -self._n_lim-self._n_of:].tolist()
+            vars = data_base[i,1: -self._n_lim-self._n_of].tolist()
             self.population.append(individual.IndividualGA(self._n_var, self._n_gen_var, self._n_of, self._n_lim))
             self.population[i].setOf(ofs)
             self.population[i].setVars(vars)
