@@ -15,7 +15,9 @@ import glob
 import re
 
 # import the ./src path so that python can find the modules
-sys.path.append(os.getcwd() + '/src/')
+import os
+dirname, filename = os.path.split(os.path.abspath(__file__))
+sys.path.append(dirname + '/src')
 
 #import HAMON_Single_config as conf
 import HAMON_multi_contrained_conf as conf

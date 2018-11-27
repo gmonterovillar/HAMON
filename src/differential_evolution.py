@@ -243,7 +243,11 @@ class MODE(DE):
 
             # Apply mutation forcing that if possible, the selected random individuals belong to rank 1
             # if there are not enough rank 1, go to rank 2... and finally to unfeasible
-            candidate_indexes = rank_list_fp[0]
+            # If there are no current feasible individuals, all will be taken from the non-feasible ones
+            if len(rank_list_fp) > 0:
+                candidate_indexes = rank_list_fp[0]
+            else:
+                candidate_indexes = rank_list_nfp[0]
             rank = 1
             while len(candidate_indexes) < 3 and rank < len(rank_list_fp):
                 candidate_indexes += rank_list_fp[rank]

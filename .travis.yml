@@ -1,0 +1,6 @@
+language: python
+python:
+ - "3.6"
+cache: pip
+install: "pip install numpy"
+script: cd unit_testing/; python -m unittest -v  

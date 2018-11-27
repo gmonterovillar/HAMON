@@ -1,6 +1,7 @@
 import random
 import numpy as np
 
+
 class Individual:
 
     def __init__(self, n_var, n_of, n_lim):
@@ -32,7 +33,7 @@ class Individual:
 
     def evaluate(self, of_functions, lim_functions):
         """From the varaibles of the individual, evaluates the objectives functions"""
-        #TODO trying to see if the evaluate doesnt need to pass each of the variables separately
+        # TODO trying to see if the evaluate doesnt need to pass each of the variables separately
         '''
         v = self._var
         for i in range(self._n_of):
@@ -53,17 +54,22 @@ class Individual:
         '''
         for i in range(self._n_of):
             f = of_functions[i]
-            self._of[i]=f(*self._var)
+            self._of[i] = f(*self._var)
         if self._n_lim > 0:
             for i in range(self._n_lim):
                 fLim = lim_functions[i]
-                self._lim_var[i]=fLim(*self._var)
+                self._lim_var[i] = fLim(*self._var)
+
+    def getCrowdedDistance(self):
+        return self._crowded_dist
+
+    def setCrowdedDistance(self, crowded_dist):
+        self._crowded_dist = crowded_dist
 
     def getLim(self):
         return self._lim_var
 
-
-    #TODO cehck the case where either of, n_lim or n_var is =1 for setting
+    # TODO check the case where either of, n_lim or n_var is =1 for setting
     def setLimVar(self, lim_var):
         self._lim_var = lim_var
 
@@ -89,8 +95,14 @@ class Individual:
     def getFeasibility(self):
         return self._feasibility
 
+    def setFeasibility(self, feasibility):
+        self._feasibility = feasibility
+
     def getRank(self):
         return self._rank
+
+    def setRank(self, rank):
+        self._rank = rank
 
     def _zeros(self, n):
         """Create a list containing n zeros"""
@@ -98,6 +110,7 @@ class Individual:
         for i in range(n):
             list.append(0)
         return list
+
 
 class IndividualGA(Individual):
     """Class representing one individual in the GA with the following information:
@@ -146,15 +159,11 @@ class IndividualGAIntegerVar(IndividualGA):
     def decodeChromosome(self, var_range):
         """Decodes the chromosome to obtain the value of the variables from the chromosome, taking into account
         that some variables are int variables"""
-        for i in range(self._n_var):
-            xrange = var_range[i]
-            tmp = 0
-            for j in range(self._n_gen_var):
-                tmp = tmp + 2 ** (-(j + 1)) * self.chromosome[i * self._n_gen_var + j]
-            self._var[i] = xrange[0] + tmp * (xrange[1] - xrange[0]) / (1 - 2 ** (-self._n_gen_var))
+        super().decodeChromosome(var_range)
 
         for i in self.int_var_indexes:
             self._var[i] = round(self._var[i])
+
 
 class IndividualDE(Individual):
 
@@ -164,9 +173,10 @@ class IndividualDE(Individual):
         for i in range(self._n_var):
             self._var[i] = var_range[i][0] + random.random() * (var_range[i][1] - var_range[i][0])
 
-    # TODO Fix integers vars
+    # TODO check if this is really needed
     def fixIntegerVars(self, var_range):
         pass
+
 
 class IndividualDEIntegerVar(IndividualDE):
     """Class representing one individual in the DE with the following information
@@ -175,6 +185,7 @@ class IndividualDEIntegerVar(IndividualDE):
     def __init__(self, n_var, var_range, n_of, n_lim, int_var_indexes):
         super().__init__(n_var, var_range, n_of, n_lim)
         self.int_var_indexes = int_var_indexes
+        self.fixIntegerVars(var_range)
 
     def fixIntegerVars(self, var_range):
         for int_var in self.int_var_indexes:
@@ -184,8 +195,3 @@ class IndividualDEIntegerVar(IndividualDE):
             elif var > var_range[int_var][1]:
                 var -= 1
             self._var[int_var] = var
-
-
-
-
-
