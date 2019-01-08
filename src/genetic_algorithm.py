@@ -1,7 +1,16 @@
-import EA_config as conf
+import read_input_arguments as ria
 import populations
 import sys
 import random
+import os
+
+[conf_file, conf_file_ea] = ria.getInputArguments(sys.argv, False)
+dirname_conf, filename_conf = os.path.split(os.path.abspath(conf_file))
+dirname_conf_ea, filename_conf_ea = os.path.split(os.path.abspath(conf_file_ea))
+sys.path.append(dirname_conf)
+sys.path.append(dirname_conf_ea)
+
+confEA = __import__(filename_conf_ea[:-3])
 
 class GA:
     def __init__(self, var_names, of_names, lim_var_names, n_var, n_lim, max_min, any_int_var, int_var_indexes):
@@ -24,15 +33,15 @@ class GA:
         self.__found_best = False
 
         # Get the variables in the EA_config.py file
-        self._pop_size = int(conf.pop_size)
-        self._n_gen = conf.n_gen
-        self._n_gen_var = conf.n_gen_var
-        if conf.mut_rate>=0:
-            self._mut_rate = conf.mut_rate
+        self._pop_size = int(confEA.pop_size)
+        self._n_gen = confEA.n_gen
+        self._n_gen_var = confEA.n_gen_var
+        if confEA.mut_rate>=0:
+            self._mut_rate = confEA.mut_rate
         else:
             self._mut_rate = 1/(self._n_gen_var*self._n_var)
-        self._cross_rate = conf.cross_rate
-        self._tour_sel_param = conf.tour_sel_param
+        self._cross_rate = confEA.cross_rate
+        self._tour_sel_param = confEA.tour_sel_param
 
     def optimize(self, project_name, var_range, of_function, var_data, of_data, lim_range_orig, \
                  range_gen, lim_functions, mod_lim_range):
@@ -236,11 +245,11 @@ class NSGA_II(GA):
         self.__n_of = n_of
 
         # Get the variables in the EA_config.py file which are specific for MO-EA
-        self.__type_dist = conf.type_dist
-        self.__compare_w_data = conf.compare_w_data
-        self.__perc_rank1 = conf.perc_rank1
-        self.__perc_nf = conf.perc_nf
-        self.__n_to_select = conf.n_to_select
+        self.__type_dist = confEA.type_dist
+        self.__compare_w_data = confEA.compare_w_data
+        self.__perc_rank1 = confEA.perc_rank1
+        self.__perc_nf = confEA.perc_nf
+        self.__n_to_select = confEA.n_to_select
 
     def optimize(self, project_name, var_range, of_functions, var_data, of_data, lim_range_orig, \
                  range_gen, lim_functions, mod_lim_range):
