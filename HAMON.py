@@ -20,16 +20,28 @@ dirname, filename = os.path.split(os.path.abspath(__file__))
 sys.path.append(dirname + '/src')
 
 #import HAMON_Single_config as conf
-import HAMON_multi_contrained_conf as conf
+#import HAMON_multi_contrained_conf as conf
 #import HAMON_Multi_config as conf
-import EA_config as confEA
+#import EA_config as confEA
+import read_input_arguments as ria
 import genetic_algorithm as ga
 import differential_evolution as de
 import metamodels
+import sys
 
 
 def main():
-    #printLogoAndHeader()
+    printHeader()
+
+    [conf_file, conf_file_ea] = ria.getInputArguments(sys.argv)
+    dirname_conf, filename_conf = os.path.split(os.path.abspath(conf_file))
+    dirname_conf_ea, filename_conf_ea = os.path.split(os.path.abspath(conf_file_ea))
+    sys.path.append(dirname_conf)
+    sys.path.append(dirname_conf_ea)
+
+    conf = __import__(filename_conf[:-3])
+    confEA = __import__(filename_conf_ea[:-3])
+
 
     # Get the variables from HAMON_config.py file
     n_var = conf.n_var
@@ -194,7 +206,6 @@ def main():
 
     return
 
-
 def checkConvergence(selected_var, of_functions, lim_functions=0):
     #TODO change this so that it will work with limitations
     """Check the convergence of the meta model"""
@@ -300,8 +311,8 @@ def readDataBase(file_name, n_var, n_of, n_lim):
         of_data = data[:, 1 + n_var:]
         return [var_data.tolist(), of_data.tolist(), []]
 
-def printLogoAndHeader():
-    print('\n\n\nGonzalo Montero Villar\nDepartment of Mechanics and Maritime Sciences\nDivision fo Fluid Dynamics\nChalmers University of Technology, Gothenburg, Sweden\nvillar@chalmers.se\n\n')
+def printHeader():
+    print('\nGonzalo Montero Villar\nDepartment of Mechanics and Maritime Sciences\nDivision fo Fluid Dynamics\nChalmers University of Technology, Gothenburg, Sweden\nvillar@chalmers.se\n\n')
 
 # Standard boilerplate to call the main() function to begin
 # the program.
