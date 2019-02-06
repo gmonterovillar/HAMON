@@ -142,7 +142,7 @@ class GA:
 
             best_fitness_over_iter.append(self.__best_fitness)
 
-        convergence_file = open(project_name + '.csv','w')
+        convergence_file = open(project_name + '_convergence.csv','w')
         convergence_file.write('Iteration, Best_fitness\n')
         for i in range(len(best_fitness_over_iter)):
             convergence_file.write(str(i) + ', ' + str(best_fitness_over_iter[i]) + '\n')

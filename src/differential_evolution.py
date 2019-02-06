@@ -1,6 +1,15 @@
-import EA_config as conf
+import read_input_arguments as ria
 import sys
 import populations
+import os
+
+[conf_file, conf_file_ea] = ria.getInputArguments(sys.argv, False)
+dirname_conf, filename_conf = os.path.split(os.path.abspath(conf_file))
+dirname_conf_ea, filename_conf_ea = os.path.split(os.path.abspath(conf_file_ea))
+sys.path.append(dirname_conf)
+sys.path.append(dirname_conf_ea)
+
+conf = __import__(filename_conf_ea[:-3])
 
 class DE:
     def __init__(self, var_names, of_names, lim_var_names, n_var, n_lim, max_min, any_int_var, int_var_indexes):

@@ -43,7 +43,7 @@ def main():
     confEA = __import__(filename_conf_ea[:-3])
 
 
-    # Get the variables from HAMON_config.py file
+    # Get the variables from config file
     n_var = conf.n_var
     n_of = conf.n_of
     n_lim = conf.n_lim
@@ -312,7 +312,7 @@ def readDataBase(file_name, n_var, n_of, n_lim):
         return [var_data.tolist(), of_data.tolist(), []]
 
 def printHeader():
-    print('\nGonzalo Montero Villar\nDepartment of Mechanics and Maritime Sciences\nDivision fo Fluid Dynamics\nChalmers University of Technology, Gothenburg, Sweden\nvillar@chalmers.se\n\n')
+    print('\n\n|    |   ----  |\\    /|  ----  |\\    |\n|    |  |    | | \\  / | |    | | \\   |\n|----|  |----| |  \\/  | |    | |  \\  |\n|    |  |    | |      | |    | |   \\ |\n|    |  |    | |      |  ----  |    \\|\n\n  Gonzalo Montero Villar\n  Department of Mechanics and Maritime Sciences\n  Division fo Fluid Dynamics\n  Chalmers University of Technology, Gothenburg, Sweden\n  villar@chalmers.se\n\n')
 
 # Standard boilerplate to call the main() function to begin
 # the program.
