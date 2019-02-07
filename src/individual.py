@@ -11,6 +11,8 @@ class Individual:
         self._of = self._zeros(self._n_of)
         if self._n_lim > 0:
             self._lim_var = self._zeros(self._n_lim)
+        else:
+            self._lim_var = []
         self._crowded_dist = 0.
         self._feasibility = True
         self._rank = 0

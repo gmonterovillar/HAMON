@@ -9,7 +9,7 @@
 # [1] - Molga, M., & Smutnicki, C. Test functions for optimization needs (2005)
 # [2] - https://www.sfu.ca/~ssurjano/dejong5.html
 
-print('Minimizing the De Jong’s fifth function. The minimum value is around 0.9980038378\n')
+print('Minimizing the De Jong’s fifth function. The minimum value is around 0.998004\n')
 
 n_of = 1
 n_var = 2
@@ -27,6 +27,7 @@ mod_lim_range = []
 max_min = ['min']
 analytical_funcs = True
 working_directory = '.'
+plotting = True
 
 
 def getFunctionsAnalytical():

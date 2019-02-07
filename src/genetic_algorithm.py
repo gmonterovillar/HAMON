@@ -12,6 +12,7 @@ sys.path.append(dirname_conf_ea)
 
 confEA = __import__(filename_conf_ea[:-3])
 
+
 class GA:
     def __init__(self, var_names, of_names, lim_var_names, n_var, n_lim, max_min, any_int_var, int_var_indexes):
         self._pop = []
@@ -140,23 +141,57 @@ class GA:
             if self.__found_best:
                 self.__introduceElitism(var_range, of_function, lim_functions, lim_range)
 
-            best_fitness_over_iter.append(self.__best_fitness)
+            if self.__found_best:
+                best_fitness_over_iter.append([generation + 1, self._pop.population[self.__best_index].getOf()[0],
+                                               self._pop.population[self.__best_index].getLimVar(),
+                                               self._pop.population[self.__best_index].getVar()])
 
-        convergence_file = open(project_name + '_convergence.csv','w')
-        convergence_file.write('Iteration, Best_fitness\n')
+
+        # Write data base best individual summary
+        bi_summary_file = open(project_name + '_bi_summary.csv', 'w')
+        header = 'Generation, %s ' % (self._of_names[0])
+        if self._n_lim > 0:
+            for l_name in self._lim_var_names:
+                header += ', ' + l_name
+        header += '\n'
+        bi_summary_file.write(header)
         for i in range(len(best_fitness_over_iter)):
-            convergence_file.write(str(i) + ', ' + str(best_fitness_over_iter[i]) + '\n')
-        convergence_file.close()
+            str_best = str(best_fitness_over_iter[i][0]) + ', ' + str(best_fitness_over_iter[i][1])
+            if self._n_lim > 0:
+                for lim in best_fitness_over_iter[i][2]:
+                    str_best += ', ' + str(lim)
+            str_best += '\n'
+            bi_summary_file.write(str_best)
+        bi_summary_file.close()
 
+        # Write data base best individual
+        bi_file = open(project_name + '_bi.csv', 'w')
+        header = 'Generation, '
+        for v_name in self._var_names:
+            header += ', ' + v_name
+        header += '\n'
+        bi_file.write(header)
+        for i in range(len(best_fitness_over_iter)):
+            str_best = str(best_fitness_over_iter[i][0]) + ', '
+            for var in best_fitness_over_iter[i][3]:
+                str_best += ', ' + str(var)
+            str_best += '\n'
+            bi_file.write(str_best)
+        bi_file.close()
 
         #TODO put all this into a function
         if self.__found_best:
             self.__selectElitism()
-            str_best = '\nThe best found individual:\n\tvariables = ['
+            str_best = '\nThe best found individual:\n\tDesign variables:\n'
             best_var = self._pop.population[self.__best_index].getVar()
             for i in range(self._n_var):
-                str_best +='%.5f, ' % (best_var[i])
-            str_best = str_best[:-2] + (']\n\tFitness value: %.10f\n' % (self._pop.population[self.__best_index].getOf()[0]))
+                str_best +='\t\t%s = %.10f\n' % (self._var_names[i], best_var[i])
+            if self._n_lim:
+                best_lim = self._pop.population[self.__best_index].getLimVar()
+                str_best += '\tLimiting variables:\n'
+                for i in range(self._n_lim):
+                    str_best += '\t\t%s = %.10f\n' % (self._lim_var_names[i], best_lim[i])
+            str_best += ('\tFitness value:\n\t\t%s = %.10f\n' % (self._of_names[0], self._pop.population[self.__best_index].getOf()[0]))
             print(str_best)
         else:
             print('\nNo individual that fulfills all constraints has been found!!\n')
@@ -237,19 +272,28 @@ class GA:
         sys.stdout.flush()
 
 
-
 class NSGA_II(GA):
     def __init__(self, var_names, of_names, lim_var_names, n_var, n_of, n_lim, max_min, any_int_var, int_var_indexes):
 
         super().__init__(var_names, of_names, lim_var_names, n_var, n_lim, max_min, any_int_var, int_var_indexes)
         self.__n_of = n_of
 
-        # Get the variables in the EA_config.py file which are specific for MO-EA
-        self.__type_dist = confEA.type_dist
-        self.__compare_w_data = confEA.compare_w_data
+        # Some default settings
+        self.__type_dist = 1
+        self.__compare_w_data = False
+        self.__n_to_select = -1
+
         self.__perc_rank1 = confEA.perc_rank1
         self.__perc_nf = confEA.perc_nf
-        self.__n_to_select = confEA.n_to_select
+
+        try:
+            self.__n_to_select = confEA.n_to_select
+        except:
+            pass
+
+        if self.__n_to_select > 0:
+            self.__type_dist = confEA.type_dist
+            self.__compare_w_data = confEA.compare_w_data
 
     def optimize(self, project_name, var_range, of_functions, var_data, of_data, lim_range_orig, \
                  range_gen, lim_functions, mod_lim_range):
@@ -287,9 +331,9 @@ class NSGA_II(GA):
         pop_f = []
         pop_nf = []
         for ind in self._pop.population:
-            if ind.feasibility:
+            if ind.getFeasibility():
                 pop_f.append(ind)
-            elif not ind.feasibility:
+            else:
                 pop_nf.append(ind)
 
         [pop_fp, rank_list_fp] = self._pop.rankPopulation(pop_f, self._max_min)
@@ -364,7 +408,7 @@ class NSGA_II(GA):
             pop_f = []
             pop_nf = []
             for ind in self._pop.populationPQ:
-                if ind.feasibility:
+                if ind.getFeasibility():
                     pop_f.append(ind)
                 else:
                     pop_nf.append(ind)
@@ -382,88 +426,49 @@ class NSGA_II(GA):
 
         ##=========================== Output section ===============================
 
-        # Assign ranking to individuals by splitting population into feasible and unfeasible
-        pop_f = []
-        pop_nf = []
-        total_f = 0
-        for ind in self._pop.population:
-            if ind.feasibility:
-                pop_f.append(ind)
-                total_f += 1
-            else:
-                pop_nf.append(ind)
+        if self.__n_to_select > 0:
+            # Assign ranking to individuals by splitting population into feasible and unfeasible
+            pop_f = []
+            pop_nf = []
+            total_f = 0
+            for ind in self._pop.population:
+                if ind.getFeasibility():
+                    pop_f.append(ind)
+                    total_f += 1
+                else:
+                    pop_nf.append(ind)
 
-        [pop_fp, rank_list_fp] = self._pop.rankPopulation(pop_f, self._max_min)
+            [pop_fp, rank_list_fp] = self._pop.rankPopulation(pop_f, self._max_min)
 
-        # If not enough feasible, add also the non feasible so that they can be selected
-        if total_f < self.__n_to_select:
-            [pop_nfp, rank_list_nfp] = self._pop.rankPopulation(pop_nf, self._max_min)
-            rank_list_fp += rank_list_nfp
+            # If not enough feasible, add also the non feasible so that they can be selected
+            if total_f < self.__n_to_select:
+                [pop_nfp, rank_list_nfp] = self._pop.rankPopulation(pop_nf, self._max_min)
+                rank_list_fp += rank_list_nfp
 
-        # Select the best found individuals
-        selected_indexes = self._pop.selectIndividuals(rank_list_fp, self.__n_to_select, \
-                                                       self.__type_dist, var_data, of_data,
-                                                       self.__compare_w_data)
-        # Write the four databases
+            # Select the best found individuals along pareto-front
+            selected_indexes = self._pop.selectIndividuals(rank_list_fp, self.__n_to_select,
+                                                           self.__type_dist, var_data, of_data,
+                                                           self.__compare_w_data)
+
+            # Write the four databases of the selected individuals
+            self._pop.writeDataBase(project_name, self._of_names, self._var_names, self._lim_var_names, 0,
+                                    selected_indexes)
+            self._pop.writeDataBase(project_name, self._of_names, self._var_names, self._lim_var_names, 1,
+                                    selected_indexes)
+
+        # Write the four databases for final generation
         self._pop.writeDataBase(project_name, self._of_names, self._var_names, self._lim_var_names, 0)
         self._pop.writeDataBase(project_name, self._of_names, self._var_names, self._lim_var_names, 1)
-        self._pop.writeDataBase(project_name, self._of_names, self._var_names, self._lim_var_names, 0, selected_indexes)
-        self._pop.writeDataBase(project_name, self._of_names, self._var_names, self._lim_var_names, 1, selected_indexes)
 
         # Put the selected designs variables in a list for the output
         selected_designs = []
-        for i in selected_indexes:
-            selected_designs.append(self._pop.population[i].getVar())
+
+        if self.__n_to_select > 0:
+            for i in selected_indexes:
+                selected_designs.append(self._pop.population[i].getVar())
 
         print()
         return selected_designs
-
-    def __writeDataBaseOld(self, project_name, summary, indexes=0):
-        """ Writes data base of individual based on the following:
-        summary = 0 writes complete, summary = 1 writes summary
-        if a 0 is passed ad indexes then the entire population is written on the database,
-        if a non empty list is passed, the corresponding individuals are written"""
-
-        title = project_name
-        if not indexes:
-            title += '_fg'
-            indexes = range(self._pop_size)
-        else:
-            title += '_sel'
-
-        if summary == 1:
-            title += '_summary'
-
-        output = open(title + '.csv', 'w')
-        header_txt = 'indv,  '
-        if summary == 1:
-            for i in range(self.__n_of):
-                header_txt += '%s,  ' % (self._of_names[i])
-            for i in range(self._n_lim):
-                header_txt += '%s,  ' % (self._lim_var_names[i])
-            header_txt += 'rank,  feasible?'
-            output.write(header_txt + '\n')
-
-            for i in indexes:
-                indv_line = '%d,  ' % (i)
-                for j in range(self.__n_of):
-                    indv_line += '%s,  ' % (str(self._pop.population[i].getOf()[j]))
-                for j in range(self._n_lim):
-                    indv_line += '%sf,  ' % (str(self._pop.population[i].lim_var[j]))
-                indv_line += '%d,  %s' % (self._pop.population[i].rank, self._pop.population[i].feasibility)
-                output.write(indv_line + '\n')
-
-        else:
-            for i in range(self._n_var):
-                header_txt += '%s,  ' % (self._var_names[i])
-            output.write(header_txt[:-3] + '\n')
-
-            for i in indexes:
-                indv_line = '%d,  ' % (i)
-                for j in range(self._n_var):
-                    indv_line += '%s,  ' % (str(self._pop.population[i].getVar()[j]))
-                output.write(indv_line[:-3] + '\n')
-        output.close()
 
     def __checkInputs(self, var_range, range_gen):
         """Check if some of the given inputs need to be corrected. For instance, the size of the population has to

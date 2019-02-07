@@ -16,13 +16,10 @@ import re
 
 # import the ./src path so that python can find the modules
 import os
+
 dirname, filename = os.path.split(os.path.abspath(__file__))
 sys.path.append(dirname + '/src')
 
-#import HAMON_Single_config as conf
-#import HAMON_multi_contrained_conf as conf
-#import HAMON_Multi_config as conf
-#import EA_config as confEA
 import read_input_arguments as ria
 import genetic_algorithm as ga
 import differential_evolution as de
@@ -41,7 +38,6 @@ def main():
 
     conf = __import__(filename_conf[:-3])
     confEA = __import__(filename_conf_ea[:-3])
-
 
     # Get the variables from config file
     n_var = conf.n_var
@@ -85,7 +81,7 @@ def main():
     os.chdir(working_directory)
     EA_path = os.getcwd() + '/EA_data/'
     if not os.path.isdir(EA_path):
-        print('Creating directory %s' % (EA_path))
+        print('Creating directory %s\n' % (EA_path))
         os.system('mkdir %s' % (EA_path))
 
     if not analytical_funcs:
@@ -108,7 +104,8 @@ def main():
 
             # Write the LHS variables so that in case the process is stopped, the remaining cases from the LHS can be run
             file_name_LHS = os.getcwd() + '/LHS.csv'
-            print('DOE by means of LHS created with ' + str(len(var_data)) + ' designs, the design variables are written in ' + file_name_LHS)
+            print('DOE by means of LHS created with ' + str(
+                len(var_data)) + ' designs, the design variables are written in ' + file_name_LHS)
             writeDataBase(file_name_LHS, var_data, var_names)
 
             # var_data to list
@@ -121,26 +118,26 @@ def main():
             else:
                 [_, of_data, lim_data, successful] = conf.evaluateSetOfCases(var_data, n_lim)
 
-            #TODO only take the successful ones for the Meta model
+            # TODO only take the successful ones for the Meta model
 
     if n_of > 1:
         if confEA.EA_type == 'GA':
-            print('Optimizer : NSGA_II')
+            print('Optimizer : NSGA-II (multi-objective GA)')
             optimizer = ga.NSGA_II(var_names, of_names, lim_var_names, n_var, n_of, n_lim, max_min, any_int_var,
-                                    int_var_indexes)
+                                   int_var_indexes)
         elif confEA.EA_type == 'DE':
             print('Optimizer : multi-objective DE')
             optimizer = de.MODE(var_names, of_names, lim_var_names, n_var, n_of, n_lim, max_min, any_int_var,
-                                   int_var_indexes)
+                                int_var_indexes)
     else:
         if confEA.EA_type == 'GA':
-            print('Optimizer : single objective GA')
+            print('Optimizer : single-objective GA')
             optimizer = ga.GA(var_names, of_names, lim_var_names, n_var, n_lim, max_min, any_int_var,
-                                  int_var_indexes)
+                              int_var_indexes)
         elif confEA.EA_type == 'DE':
-            print('Optimizer : single objective DE')
+            print('Optimizer : single-objective DE')
             optimizer = de.DE(var_names, of_names, lim_var_names, n_var, n_lim, max_min, any_int_var,
-                                  int_var_indexes)
+                              int_var_indexes)
 
     # Get the objective functions and the limiting functions from what has been defined in HAMON_config.py
     if analytical_funcs:
@@ -154,14 +151,19 @@ def main():
         of_data = []
 
         optimizer.optimize(EA_path + project_name, var_range, of_functions, var_data, of_data, \
-                              lim_range_orig, range_gen, lim_functions, mod_lim_range)
+                           lim_range_orig, range_gen, lim_functions, mod_lim_range)
 
+        if conf.plotting:
+            if n_of == 1:
+                plotSingleObjective(working_directory, project_name, of_names)
+            elif n_of == 2:
+                plotMultiObjective(working_directory, project_name, of_names, conf.true_pareto)
     else:
         meta_model_type = conf.meta_model_type
-        #TODO fix this so that it can be taken from HAMON_config.py
+        # TODO fix this so that it can be taken from HAMON_config.py
         perc_training = 0.8
         eps_scale_range = 3
-        basis = ['multiquadric','gaussian']
+        basis = ['multiquadric', 'gaussian']
         eps_eval = 250
         var_data_to_add = var_data[:]
         of_data_to_add = of_data[:]
@@ -172,7 +174,8 @@ def main():
         current_opti_loops = getOptiLoopsAlreadyRun(EA_path, project_name)
 
         for i in range(current_opti_loops, max_opti_loops):
-            print('Running optimization loop ' + str(i+1) + ', currently a total of ' + str(len(var_data)) + ' successful evaluations have been made')
+            print('Running optimization loop ' + str(i + 1) + ', currently a total of ' + str(
+                len(var_data)) + ' successful evaluations have been made')
             if not n_lim:
                 MM.addData(var_data_to_add, of_data_to_add)
                 print('Optimizing meta-model')
@@ -180,13 +183,12 @@ def main():
                 of_functions = MM.getObjectiveFunctions()
                 lim_functions = []
             else:
-                #TODO fix the meta-model when there are limitations
+                # TODO fix the meta-model when there are limitations
                 [of_functions, lim_functions] = conf.getFunctionsFromRBF(var_data, of_data, lim_data)
 
-            selected_individuals = optimizer.optimize(EA_path + project_name + '_'  + str(i+1), var_range, \
-                                                        of_functions, var_data, of_data, lim_range_orig, range_gen,
-                                                        lim_functions, mod_lim_range)
-
+            selected_individuals = optimizer.optimize(EA_path + project_name + '_' + str(i + 1), var_range, \
+                                                      of_functions, var_data, of_data, lim_range_orig, range_gen,
+                                                      lim_functions, mod_lim_range)
 
             [variables_selected, ofs_selected, lim_selected] = checkConvergence(selected_individuals, of_functions)
 
@@ -206,8 +208,9 @@ def main():
 
     return
 
+
 def checkConvergence(selected_var, of_functions, lim_functions=0):
-    #TODO change this so that it will work with limitations
+    # TODO change this so that it will work with limitations
     """Check the convergence of the meta model"""
     n_of = len(of_functions)
     if not lim_functions:
@@ -222,7 +225,7 @@ def checkConvergence(selected_var, of_functions, lim_functions=0):
         if successful[i]:
             variables_to_check.append(variables[i])
             ofs_to_check.append(ofs[i])
-            #lim_to_check.append(lim[i])
+            # lim_to_check.append(lim[i])
 
     percError = 0
     for i in range(len(variables_to_check)):
@@ -230,10 +233,12 @@ def checkConvergence(selected_var, of_functions, lim_functions=0):
         for j in range(n_of):
             f = of_functions[j]
             of_individual.append(f(*variables_to_check[i]))
-            percError += abs((of_individual[j] - ofs_to_check[i][j]) / ofs_to_check[i][j]) / (n_of * len(variables_to_check))
+            percError += abs((of_individual[j] - ofs_to_check[i][j]) / ofs_to_check[i][j]) / (
+                        n_of * len(variables_to_check))
     print('the percentage error is %.5f' % (percError * 100))
 
     return [variables_to_check, ofs_to_check, lim_to_check]
+
 
 def getOptiLoopsAlreadyRun(EA_path, project_name):
     all_files = glob.glob(EA_path + project_name + '*')
@@ -301,7 +306,7 @@ def writeDataBase(fileName, var, var_names, of=[], of_names=0, lim=[], lim_names
 def readDataBase(file_name, n_var, n_of, n_lim):
     data = np.genfromtxt(file_name, skip_header=1, delimiter=',')
 
-    #data = np.loadtxt(fileName, delimiter=',', skiprows=1)
+    # data = np.loadtxt(fileName, delimiter=',', skiprows=1)
     var_data = data[:, 1:-n_of - n_lim]
     if n_lim > 0:
         of_data = data[:, 1 + n_var:-n_lim]
@@ -311,8 +316,73 @@ def readDataBase(file_name, n_var, n_of, n_lim):
         of_data = data[:, 1 + n_var:]
         return [var_data.tolist(), of_data.tolist(), []]
 
+
+def plotSingleObjective(working_directory, project_name, of_names):
+    import matplotlib.pyplot as plt
+    data = np.genfromtxt(working_directory + '/EA_data/' + project_name + '_bi_summary.csv', skip_header=True,
+                         delimiter=',')
+    plt.figure()
+    plt.plot(data[:, 0], data[:, 1])
+    plt.xlabel('Generation number')
+    plt.ylabel(of_names[0])
+    plt.grid()
+    plt.title('Best found individual: %s = %.6f' % (of_names[0], data[-1, 1]))
+    plt.show()
+
+def plotMultiObjective(working_directory, project_name, of_names, true_pareto):
+    import matplotlib.pyplot as plt
+
+    of1s = []
+    of2s = []
+    rank = []
+    feasible = []
+    of1 = []
+    of2 = []
+    count = 0
+    non_feasible_of1 = []
+    non_feasible_of2 = []
+
+    data_file = open(working_directory + '/EA_data/' + project_name + '_fg_summary.csv', 'r')
+    for line in data_file:
+        if count == 0:
+            count += 1
+        else:
+            line_s = line.split(',')
+            of1s.append(float(line_s[1]))
+            of2s.append(float(line_s[2]))
+            rank.append(int(line_s[-2]))
+            feasible.append(''.join(line_s[-1].split()) == 'True')
+
+    for i in range(len(of1s)):
+        if feasible[i]:
+            if len(of1) < rank[i]:
+                of1.append([])
+                of2.append([])
+            of1[rank[i] - 1].append(of1s[i])
+            of2[rank[i] - 1].append(of2s[i])
+        else:
+            non_feasible_of1.append(of1s[i])
+            non_feasible_of2.append(of2s[i])
+
+    plt.figure()
+    for i in range(len(of1)):
+        plt.plot(of1[i], of2[i], 'o', label='rank %d' % (i+1))
+    if len(non_feasible_of1) > 0:
+        plt.plot(non_feasible_of1, non_feasible_of2, 'o', label='non-feasible')
+    if true_pareto:
+        data_true_pareto = np.genfromtxt(working_directory + '/true_pareto.csv', delimiter=',')
+        plt.plot(data_true_pareto[:, 0], data_true_pareto[:, 1], label='true pareto')
+    plt.xlabel(of_names[0])
+    plt.ylabel(of_names[1])
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+
 def printHeader():
-    print('\n\n|    |   ----  |\\    /|  ----  |\\    |\n|    |  |    | | \\  / | |    | | \\   |\n|----|  |----| |  \\/  | |    | |  \\  |\n|    |  |    | |      | |    | |   \\ |\n|    |  |    | |      |  ----  |    \\|\n\n  Gonzalo Montero Villar\n  Department of Mechanics and Maritime Sciences\n  Division fo Fluid Dynamics\n  Chalmers University of Technology, Gothenburg, Sweden\n  villar@chalmers.se\n\n')
+    print(
+        '\n\n|    |   ----  |\\    /|  ----  |\\    |\n|    |  |    | | \\  / | |    | | \\   |\n|----|  |----| |  \\/  | |    | |  \\  |\n|    |  |    | |      | |    | |   \\ |\n|    |  |    | |      |  ----  |    \\|\n\n  Gonzalo Montero Villar\n  Department of Mechanics and Maritime Sciences\n  Division fo Fluid Dynamics\n  Chalmers University of Technology, Gothenburg, Sweden\n  villar@chalmers.se\n\n')
+
 
 # Standard boilerplate to call the main() function to begin
 # the program.

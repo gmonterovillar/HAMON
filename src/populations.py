@@ -26,7 +26,7 @@ class Population:
     def nulliffyFeasibility(self, population):
         """Sets all the individuals of a population to feasible"""
         for i in range(len(population)):
-            population[i].feasibility = True
+            population[i].setFeasibility(True)
 
 
 class PopulationGA(Population):
@@ -382,7 +382,7 @@ class PopulationMOEA:
             for rank_I_list in rank_list_nfpq:
                 crowded_set1 = self.crowdedDistanceOneSet(list(self.populationPQ[j] for j in rank_I_list), self._n_of)
                 crowded_set_sorted1 = sorted(crowded_set1, key=lambda x: x.getCrowdedDistance(), reverse=True)
-                if (len(crowded_set_sorted1) <= n_nf):
+                if len(crowded_set_sorted1) <= n_nf:
                     self.population += crowded_set_sorted1
                     n_nf -= len(crowded_set_sorted1)
                 else:
@@ -392,7 +392,7 @@ class PopulationMOEA:
                 if n_nf == 0:
                     break
 
-        # Fill the rest of the population with ranking 1to fill the perc_rank1 criteria if posible
+        # Fill the rest of the population with ranking 1to fill the perc_rank1 criteria if possible
         crowded_set2 = self.crowdedDistanceOneSet(list(self.populationPQ[j] for j in rank_list_fpq[0]), self._n_of)
         crowded_set_sorted2 = sorted(crowded_set2, key=lambda x: x.getCrowdedDistance(), reverse=True)
         if len(crowded_set_sorted2) <= n_rank1:
@@ -407,7 +407,7 @@ class PopulationMOEA:
                 indv_needed = self._size - len(self.population)
                 crowded_set3 = self.crowdedDistanceOneSet(list(self.populationPQ[j] for j in rank_I_list), self._n_of)
                 crowded_set_sorted3 = sorted(crowded_set3, key=lambda x: x.getCrowdedDistance(), reverse=True)
-                if (len(crowded_set_sorted3) <= indv_needed):
+                if len(crowded_set_sorted3) <= indv_needed:
                     self.population += crowded_set_sorted3
                 else:
                     crowded_set3_trimed = self.crowdedDistanceOneSet(crowded_set_sorted3[:indv_needed], self._n_of)
@@ -458,7 +458,7 @@ class PopulationMOEA:
                 for j in range(self._n_of):
                     indv_line += '%s,  ' % (str(self.population[i].getOf()[j]))
                 for j in range(self._n_lim):
-                    indv_line += '%sf,  ' % (str(self.population[i].getLimVar()[j]))
+                    indv_line += '%s,  ' % (str(self.population[i].getLimVar()[j]))
                 indv_line += '%d,  %s' % (self.population[i].getRank(), self.population[i].getFeasibility())
                 output.write(indv_line + '\n')
 
@@ -487,7 +487,7 @@ class PopulationsMOGA(PopulationGA, PopulationMOEA):
         rank1 = self.population[i1].getRank()
         rank2 = self.population[i2].getRank()
         bool1 = self.population[i1].getFeasibility()
-        bool2 = self.population[i2].getFEasibility()
+        bool2 = self.population[i2].getFeasibility()
         if bool1 > bool2:
             best = i1
         elif bool2 > bool1:
@@ -509,6 +509,7 @@ class PopulationsMOGA(PopulationGA, PopulationMOEA):
                 best = i2
             else:
                 best = i1
+
         return best
 
 
@@ -663,8 +664,6 @@ class PopulationPostMOEA(Population, PopulationMOEA):
     def initializeFromDataBase(self, data_base_file):
         data_base = np.genfromtxt(data_base_file, skip_header=1, delimiter=',')
         self._size = len(data_base)
-        print(self._size)
-        print(data_base.shape)
         for i in range(self._size):
             if self._n_lim>0:
                 lim_var = data_base[i, -self._n_lim:].tolist()

@@ -109,22 +109,54 @@ class DE:
 
             self.__findBest()
             if self.__found_best:
-                best_fitness_over_iter.append([generation+1, self._pop.population[self.__best_index].getOf()[0]])
+                best_fitness_over_iter.append([generation + 1, self._pop.population[self.__best_index].getOf()[0],
+                                               self._pop.population[self.__best_index].getLimVar(),
+                                               self._pop.population[self.__best_index].getVar()])
 
-        convergence_file = open(project_name + '_convergence.csv', 'w')
-        convergence_file.write('Iteration, Best_fitness\n')
+        # Write data base best individual summary
+        bi_summary_file = open(project_name + '_bi_summary.csv', 'w')
+        header = 'Generation, %s ' % (self._of_names[0])
+        if self._n_lim > 0:
+            for l_name in self._lim_var_names:
+                header += ', ' + l_name
+        header += '\n'
+        bi_summary_file.write(header)
         for i in range(len(best_fitness_over_iter)):
-            convergence_file.write(str(best_fitness_over_iter[i][0]) + ', ' + str(best_fitness_over_iter[i][1]) + '\n')
-        convergence_file.close()
+            str_best = str(best_fitness_over_iter[i][0]) + ', ' + str(best_fitness_over_iter[i][1])
+            if self._n_lim > 0:
+                for lim in best_fitness_over_iter[i][2]:
+                    str_best += ', ' + str(lim)
+            str_best += '\n'
+            bi_summary_file.write(str_best)
+        bi_summary_file.close()
+
+        # Write data base best individual
+        bi_file = open(project_name + '_bi.csv', 'w')
+        header = 'Generation, '
+        for v_name in self._var_names:
+            header += ', ' + v_name
+        header += '\n'
+        bi_file.write(header)
+        for i in range(len(best_fitness_over_iter)):
+            str_best = str(best_fitness_over_iter[i][0]) + ', '
+            for var in best_fitness_over_iter[i][3]:
+                str_best += ', ' + str(var)
+            str_best += '\n'
+            bi_file.write(str_best)
+        bi_file.close()
 
         # TODO put all this into a function
         if self.__found_best:
-            str_best = '\nThe best found individual:\n\tvariables = ['
+            str_best = '\nThe best found individual:\n\tDesign variables:\n'
             best_var = self._pop.population[self.__best_index].getVar()
             for i in range(self._n_var):
-                str_best += '%.10f, ' % (best_var[i])
-            str_best = str_best[:-2] + (
-            ']\n\tFitness value: %.10f\n' % (self._pop.population[self.__best_index].getOf()[0]))
+                str_best += '\t\t%s = %.10f\n' % (self._var_names[i], best_var[i])
+            if self._n_lim:
+                best_lim = self._pop.population[self.__best_index].getLimVar()
+                str_best += '\tLimiting variables:\n'
+                for i in range(self._n_lim):
+                    str_best += '\t\t%s = %.10f\n' % (self._lim_var_names[i], best_lim[i])
+            str_best += ('\tFitness value:\n\t\t%s = %.10f\n' % (self._of_names[0], self._pop.population[self.__best_index].getOf()[0]))
             print(str_best)
         else:
             print('\nNo individual that fulfills all constraints has been found!!\n')
@@ -183,12 +215,23 @@ class MODE(DE):
         super().__init__(var_names, of_names, lim_var_names, n_var, n_lim, max_min, any_int_var, int_var_indexes)
         self._n_of = n_of
 
-        # Get the variables in the EA_config.py file which are specific for MO-EA
-        self.__type_dist = conf.type_dist
-        self.__compare_w_data = conf.compare_w_data
+        # Some default settings
+        self.__type_dist = 1
+        self.__compare_w_data = False
+        self.__n_to_select = -1
+
         self.__perc_rank1 = conf.perc_rank1
         self.__perc_nf = conf.perc_nf
-        self.__n_to_select = conf.n_to_select
+
+        try:
+            self.__n_to_select = conf.n_to_select
+        except:
+            pass
+
+        if self.__n_to_select > 0:
+            self.__type_dist = conf.type_dist
+            self.__compare_w_data = conf.compare_w_data
+
 
     def optimize(self, project_name, var_range, of_functions, var_data, of_data, lim_range_orig, \
                  range_gen, lim_functions, mod_lim_range):
@@ -316,43 +359,45 @@ class MODE(DE):
             self._pop.checkFeasibility(self._pop.populationQ, lim_range)
 
         # Assign ranking to individuals by splitting population into feasible and unfeasible
-        pop_f = []
-        pop_nf = []
-        total_f = 0
-        for ind in self._pop.population:
-            if ind.getFeasibility():
-                pop_f.append(ind)
-                total_f += 1
-            else:
-                pop_nf.append(ind)
+        if self.__n_to_select > 0:
+            pop_f = []
+            pop_nf = []
+            total_f = 0
+            for ind in self._pop.population:
+                if ind.getFeasibility():
+                    pop_f.append(ind)
+                    total_f += 1
+                else:
+                    pop_nf.append(ind)
 
-        [pop_fp, rank_list_fp] = self._pop.rankPopulation(pop_f, self._max_min)
+            [pop_fp, rank_list_fp] = self._pop.rankPopulation(pop_f, self._max_min)
 
-        # If not enough feasible, add also the non feasible so that they can be selected
-        if total_f < self.__n_to_select:
-            [pop_nfp, rank_list_nfp] = self._pop.rankPopulation(pop_nf, self._max_min)
-            rank_list_fp += rank_list_nfp
+            # If not enough feasible, add also the non feasible so that they can be selected
+            if total_f < self.__n_to_select:
+                [pop_nfp, rank_list_nfp] = self._pop.rankPopulation(pop_nf, self._max_min)
+                rank_list_fp += rank_list_nfp
 
-        # Select the best found individuals
-        selected_indexes = self._pop.selectIndividuals(rank_list_fp, self.__n_to_select, \
-                                                       self.__type_dist, var_data, of_data,
-                                                       self.__compare_w_data)
-        # Write the four databases
-        ''''
-        self.__writeDataBase(project_name, 0)
-        self.__writeDataBase(project_name, 1)
-        self.__writeDataBase(project_name, 0, selected_indexes)
-        self.__writeDataBase(project_name, 1, selected_indexes)
-        '''
+            # Select the best found individuals
+            selected_indexes = self._pop.selectIndividuals(rank_list_fp, self.__n_to_select, \
+                                                           self.__type_dist, var_data, of_data,
+                                                           self.__compare_w_data)
+
+            # Write the four databases of the selected individuals
+            self._pop.writeDataBase(project_name, self._of_names, self._var_names, self._lim_var_names, 0,
+                                    selected_indexes)
+            self._pop.writeDataBase(project_name, self._of_names, self._var_names, self._lim_var_names, 1,
+                                    selected_indexes)
+
+        # Write the four databases of the final generation
         self._pop.writeDataBase(project_name, self._of_names, self._var_names, self._lim_var_names, 0)
         self._pop.writeDataBase(project_name, self._of_names, self._var_names, self._lim_var_names, 1)
-        self._pop.writeDataBase(project_name, self._of_names, self._var_names, self._lim_var_names, 0, selected_indexes)
-        self._pop.writeDataBase(project_name, self._of_names, self._var_names, self._lim_var_names, 1, selected_indexes)
 
-        # Put the selected designs variables in a list for the output
         selected_designs = []
-        for i in selected_indexes:
-            selected_designs.append(self._pop.population[i].getVar())
+
+        if self.__n_to_select > 0:
+            # Put the selected designs variables in a list for the output
+            for i in selected_indexes:
+                selected_designs.append(self._pop.population[i].getVar())
 
         print()
         return selected_designs

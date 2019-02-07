@@ -108,3 +108,6 @@ venv.bak/
 
 # when using a mac
 .DS_Store
+
+# from HAMON
+EA_data/
