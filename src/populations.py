@@ -28,6 +28,12 @@ class Population:
         for i in range(len(population)):
             population[i].setFeasibility(True)
 
+    def obtainPercentageOfFeasibles(self):
+        n_feasibles = 0
+        for ind in self.population:
+            if ind.getFeasibility():
+                n_feasibles += 1
+        return n_feasibles*100.0/self._size
 
 class PopulationGA(Population):
     def __init__(self, pop_size, n_var, n_gen_var, n_of, n_lim):

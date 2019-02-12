@@ -40,12 +40,12 @@ class MetaModel:
 
 class RBF(MetaModel):
 
-    def __init__(self, n_var, n_of, n_lim, perc_training = 0.8, eps_scale_range = 3, basis=['multiquadric'], eps_eval = 1000):
+    def __init__(self, n_var, n_of, n_lim, perc_construct = 0.8, eps_scale_range = 3, basis=['multiquadric'], eps_eval = 1000):
         super().__init__(n_var, n_of, n_lim)
         self.__basis = basis
         self.__eps_scale_range = eps_scale_range
         self.__eps_eval = eps_eval
-        self.__perc_training = perc_training
+        self.__perc_construct = perc_construct
         self.__rbf = []
         self._objective_functions = []
         for i in range(self._n_of):
@@ -82,10 +82,10 @@ class RBF(MetaModel):
 
     def optimize(self):
         for of in range(self._n_of):
-            self._construct_var = self._var_data[:int(len(self._var_data) * self.__perc_training), :]
-            self._construct_func = self._func_data[:int(len(self._func_data) * self.__perc_training), of]
-            self._validation_var = self._var_data[int(len(self._var_data) * self.__perc_training):, :]
-            self._validation_func = self._func_data[int(len(self._func_data) * self.__perc_training):, of]
+            self._construct_var = self._var_data[:int(len(self._var_data) * self.__perc_construct), :]
+            self._construct_func = self._func_data[:int(len(self._func_data) * self.__perc_construct), of]
+            self._validation_var = self._var_data[int(len(self._var_data) * self.__perc_construct):, :]
+            self._validation_func = self._func_data[int(len(self._func_data) * self.__perc_construct):, of]
 
             eps_def = self.contructRbf(self._construct_var, self._construct_func).epsilon
             eps_range = np.linspace(eps_def / self.__eps_scale_range, self.__eps_scale_range * eps_def, num=self.__eps_eval)
