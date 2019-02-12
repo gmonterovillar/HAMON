@@ -70,6 +70,7 @@ class DE:
             lim_range = []
 
         best_fitness_over_iter = []
+        perc_feasibles_over_iter = []
 
         # Beginning of the loop over the generations
         print('Evaluating DE generations:')
@@ -112,6 +113,8 @@ class DE:
                 best_fitness_over_iter.append([generation + 1, self._pop.population[self.__best_index].getOf()[0],
                                                self._pop.population[self.__best_index].getLimVar(),
                                                self._pop.population[self.__best_index].getVar()])
+
+            perc_feasibles_over_iter.append(self._pop.obtainPercentageOfFeasibles())
 
         # Write data base best individual summary
         bi_summary_file = open(project_name + '_bi_summary.csv', 'w')
@@ -161,11 +164,17 @@ class DE:
         else:
             print('\nNo individual that fulfills all constraints has been found!!\n')
 
+        if self._n_lim > 0:
+            return [[], perc_feasibles_over_iter]
+        else:
+            return
+
     def __updateVarsOfNewGeneration(self, new_population_vars):
         for i in range(self._pop_size):
             self._pop.population[i].setVars(new_population_vars[i][:])
 
     def __findBest(self):
+        self.__found_best = False
         if self._max_min == 'max':
             best_fitness = -float('inf')
             for i in range(self._pop_size):
@@ -243,6 +252,8 @@ class MODE(DE):
             # TODO implement integer population
             self._pop = populations.PopulationsMODEIntegerVar(self._pop_size, self._n_var, self._n_of,
                                                                     self._n_lim, self._int_var_indexes)
+
+        perc_feasibles_over_iter = []
 
         # Initialize populationP
         self._pop.initialize(var_range)
@@ -353,6 +364,9 @@ class MODE(DE):
 
             self._pop.obtainNewPopulationP(self.__perc_rank1, self.__perc_nf, rank_list_fpq, rank_list_nfpq)
 
+            # Count the number of feasibles
+            perc_feasibles_over_iter.append(self._pop.obtainPercentageOfFeasibles())
+
         self._pop.evaluate(self._pop.population, of_functions, lim_functions)
         if self._n_lim > 0:
             self._pop.nulliffyFeasibility(self._pop.populationQ)
@@ -400,4 +414,7 @@ class MODE(DE):
                 selected_designs.append(self._pop.population[i].getVar())
 
         print()
-        return selected_designs
+        if not self._n_lim:
+            return selected_designs
+        else:
+            return [selected_designs, perc_feasibles_over_iter]

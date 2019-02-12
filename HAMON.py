@@ -26,18 +26,17 @@ import differential_evolution as de
 import metamodels
 import sys
 
+[conf_file, conf_file_ea] = ria.getInputArguments(sys.argv)
+dirname_conf, filename_conf = os.path.split(os.path.abspath(conf_file))
+dirname_conf_ea, filename_conf_ea = os.path.split(os.path.abspath(conf_file_ea))
+sys.path.append(dirname_conf)
+sys.path.append(dirname_conf_ea)
+
+conf = __import__(filename_conf[:-3])
+confEA = __import__(filename_conf_ea[:-3])
 
 def main():
     printHeader()
-
-    [conf_file, conf_file_ea] = ria.getInputArguments(sys.argv)
-    dirname_conf, filename_conf = os.path.split(os.path.abspath(conf_file))
-    dirname_conf_ea, filename_conf_ea = os.path.split(os.path.abspath(conf_file_ea))
-    sys.path.append(dirname_conf)
-    sys.path.append(dirname_conf_ea)
-
-    conf = __import__(filename_conf[:-3])
-    confEA = __import__(filename_conf_ea[:-3])
 
     # Get the variables from config file
     n_var = conf.n_var
@@ -87,8 +86,8 @@ def main():
     if not analytical_funcs:
         if existing_data_base:
             # Read the existing data base
-            print('Reading existing data base from ' + data_base_file + ' ...')
-            [var_data, of_data, lim_data] = readDataBase(data_base_file, n_var, n_of, n_lim)
+            print('Reading existing data base from ' + EA_path + data_base_file + ' ...')
+            [var_data, of_data, lim_data] = readDataBase(EA_path + data_base_file, n_var, n_of, n_lim)
         else:
             # Create the LHS and evaluate it
             import pyDOE
@@ -103,7 +102,7 @@ def main():
             var_data = initial_design_set
 
             # Write the LHS variables so that in case the process is stopped, the remaining cases from the LHS can be run
-            file_name_LHS = os.getcwd() + '/LHS.csv'
+            file_name_LHS = EA_path + '/LHS.csv'
             print('DOE by means of LHS created with ' + str(
                 len(var_data)) + ' designs, the design variables are written in ' + file_name_LHS)
             writeDataBase(file_name_LHS, var_data, var_names)
@@ -150,26 +149,27 @@ def main():
         var_data = []
         of_data = []
 
-        optimizer.optimize(EA_path + project_name, var_range, of_functions, var_data, of_data, \
-                           lim_range_orig, range_gen, lim_functions, mod_lim_range)
+        if not n_lim:
+            optimizer.optimize(EA_path + project_name, var_range, of_functions, var_data, of_data, \
+                               lim_range_orig, range_gen, lim_functions, mod_lim_range)
+        else:
+            [_, perc_feasibles] = optimizer.optimize(EA_path + project_name, var_range, of_functions, var_data, of_data, \
+                               lim_range_orig, range_gen, lim_functions, mod_lim_range)
 
         if conf.plotting:
             if n_of == 1:
                 plotSingleObjective(working_directory, project_name, of_names)
             elif n_of == 2:
                 plotMultiObjective(working_directory, project_name, of_names, conf.true_pareto)
+            if n_lim > 0:
+                plotFeasibilityHistory(perc_feasibles)
     else:
         meta_model_type = conf.meta_model_type
-        # TODO fix this so that it can be taken from HAMON_config.py
-        perc_training = 0.8
-        eps_scale_range = 3
-        basis = ['multiquadric', 'gaussian']
-        eps_eval = 250
         var_data_to_add = var_data[:]
         of_data_to_add = of_data[:]
         if meta_model_type == 'RBF':
             print('Meta model: RBF')
-            MM = metamodels.RBF(n_var, n_of, n_lim, eps_eval=eps_eval)
+            MM = metamodels.RBF(n_var, n_of, n_lim, conf.perc_construct, conf.eps_scale_range, conf.basis, conf.eps_eval)
 
         current_opti_loops = getOptiLoopsAlreadyRun(EA_path, project_name)
 
@@ -203,8 +203,11 @@ def main():
                 of_data_to_add.append(ofs_selected[i])
 
             # Write data base
-            print('Writing data base to ' + os.getcwd() + '/' + project_name + '_data_base.csv')
-            writeDataBase(os.getcwd() + '/' + project_name + '_data_base.csv', var_data, [], of_data)
+            print('Writing data base to ' + EA_path + '/' + data_base_file)
+            writeDataBase(EA_path + '/' + data_base_file, var_data, [], of_data)
+
+        if conf.plotting:
+            plotMultiObjectiveMetaModel(working_directory, project_name, of_names, conf.true_pareto, max_opti_loops)
 
     return
 
@@ -241,7 +244,7 @@ def checkConvergence(selected_var, of_functions, lim_functions=0):
 
 
 def getOptiLoopsAlreadyRun(EA_path, project_name):
-    all_files = glob.glob(EA_path + project_name + '*')
+    all_files = glob.glob(EA_path + project_name + '*' + 'fg_summary.csv')
     if len(all_files) > 0:
         all_files.sort(key=lambda x: int(re.search(project_name + '_(\d+)_', x).group(1)))
         opti_loops_run = int(re.search(project_name + '_(\d+)_', all_files[-1]).group(1))
@@ -378,6 +381,51 @@ def plotMultiObjective(working_directory, project_name, of_names, true_pareto):
     plt.grid()
     plt.show()
 
+def plotMultiObjectiveMetaModel(working_directory, project_name, of_names, true_pareto, n_loops):
+    import matplotlib.pyplot as plt
+
+    of1s = []
+    of2s = []
+
+    for loop in range(n_loops):
+        of1s.append([])
+        of2s.append([])
+        data_file = open(working_directory + '/EA_data/' + project_name + '_' + str(loop + 1) + '_fg_summary.csv', 'r')
+        count = 0
+        for line in data_file:
+            if count == 0:
+                count += 1
+            else:
+                line_s = line.split(',')
+                rank = int(line_s[-2])
+                if rank < 2:
+                    of1s[loop].append(float(line_s[1]))
+                    of2s[loop].append(float(line_s[2]))
+                else:
+                    break
+
+    plt.figure()
+    for i in range(len(of1s)):
+        plt.plot(of1s[i], of2s[i], 'o', label='loop %d' % (i + 1))
+    if true_pareto:
+        data_true_pareto = np.genfromtxt(working_directory + '/true_pareto.csv', delimiter=',')
+        plt.plot(data_true_pareto[:, 0], data_true_pareto[:, 1], label='true pareto')
+    plt.xlabel(of_names[0])
+    plt.ylabel(of_names[1])
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+def plotFeasibilityHistory(perc_feasibles):
+    import matplotlib.pyplot as plt
+
+    plt.figure()
+    plt.plot(range(1, len(perc_feasibles)+1), perc_feasibles)
+    plt.xlabel('Generation number')
+    plt.ylabel('% of feasible individuals')
+    plt.title('Feasibility history')
+    plt.grid()
+    plt.show()
 
 def printHeader():
     #print(

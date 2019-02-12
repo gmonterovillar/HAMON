@@ -80,6 +80,7 @@ class GA:
             lim_range = []
 
         best_fitness_over_iter = []
+        perc_feasibles_over_iter = []
 
         # Beginning of the loop over the generations
         print('Evaluating GA generations:')
@@ -146,6 +147,8 @@ class GA:
                                                self._pop.population[self.__best_index].getLimVar(),
                                                self._pop.population[self.__best_index].getVar()])
 
+            # Count amount of feasibles
+            perc_feasibles_over_iter.append(self._pop.obtainPercentageOfFeasibles())
 
         # Write data base best individual summary
         bi_summary_file = open(project_name + '_bi_summary.csv', 'w')
@@ -195,6 +198,11 @@ class GA:
             print(str_best)
         else:
             print('\nNo individual that fulfills all constraints has been found!!\n')
+
+        if not self._n_lim:
+            return
+        else:
+            return [[], perc_feasibles_over_iter]
 
 
     def __updateChromosomesAfterTournamentAndCrossover(self, chromosomes):
@@ -347,6 +355,8 @@ class NSGA_II(GA):
         # Assign crowded distance to every individual of the initial population
         self._pop.crowdedDistance(self._pop.population, rank_list_fp, rank_list_nfp)
 
+        perc_feasibles_over_iter = []
+
         # Beginning of the loop over the generations
         print('Evaluating NSGA_II generations:')
         for generation in range(self._n_gen):
@@ -424,6 +434,9 @@ class NSGA_II(GA):
 
             self._pop.obtainNewPopulationP(self.__perc_rank1, self.__perc_nf, rank_list_fpq, rank_list_nfpq)
 
+            # Count the number of feasibles
+            perc_feasibles_over_iter.append(self._pop.obtainPercentageOfFeasibles())
+
         ##=========================== Output section ===============================
 
         if self.__n_to_select > 0:
@@ -468,7 +481,10 @@ class NSGA_II(GA):
                 selected_designs.append(self._pop.population[i].getVar())
 
         print()
-        return selected_designs
+        if not self._n_lim:
+            return selected_designs
+        else:
+            return [selected_designs, perc_feasibles_over_iter]
 
     def __checkInputs(self, var_range, range_gen):
         """Check if some of the given inputs need to be corrected. For instance, the size of the population has to
