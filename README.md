@@ -188,7 +188,7 @@ selecting the individuals to evaluate from the best founds in the EA, otherwise,
 to be evaluated will be the Euclidian distance in the design space, whereas if it is set to 1, the distance will be
 the Euclidian distance in the objective function space.
 
-## Running HAMON
+## Running HAMON
 In order to run HAMON with the two input files ready:
 ```
 $ python3 path_HAMON/HAMON.py -c path_opti_config/opti_config.py -ea path_ea_config/ea_config.py
