@@ -191,7 +191,7 @@ the Euclidian distance in the objective function space.
 ## Running HAMON
 In order to run HAMON with the two input files ready:
 ```
-python3 path_HAMON/HAMON.py -c path_opti_config/opti_config.py -ea path_ea_config/ea_config.py
+$ python3 path_HAMON/HAMON.py -c path_opti_config/opti_config.py -ea path_ea_config/ea_config.py
 ```
 
 ## Output files
@@ -275,16 +275,37 @@ with `evaluateSetOfCases()`.
 Under the `examples/` directory, several cases demonstrating how to use HAMON and its capabilities can be found. These 
 are separated into single- and mulit-objective problems.
 * `test_1`: Single-objective unconstrained, GA, De Jong’s fifth function
+
+<img src="Figures/test_1_bi.png" height="280">
+
 * `test_2`: Single-objective contrained, DE, Golinski's speed reducer
+
+<img src="Figures/test_2_bi.png" height="280"> <img src="Figures/test_2_feas.png" height="280">
+
 * `test_3`: Multi-objective unconstrained, GA (NSGA-II), ZDT 1
+
+<img src="Figures/test_3_pareto.png" height="280">
+
 * `test_4`: Multi-objective constrained, DE, TNK
+
+<img src="Figures/test_4_pareto.png" height="280">
+
 * `test_5`: Multi-objective unconstrained, DE, ZDT 1 using meta-modeling (RBF)
+
+<img src="Figures/test_5_pareto.png" height="280">
 
 In order to run all the examples, the following can be executed
 ```
-cd examples/
-python3 execute_tests.py
+$ cd examples/
+$ python3 execute_tests.py
 ```
+
+## Reporting
+In case any bug or any malfunction on the code is detected, it would be greatly appreciated if it is reported in
+
+https://github.com/gmonterovillar/HAMON/issues
+
+so that the issue can be taken a look at and hopefully fixed.
 
 ## Credits
 ### Main developer
