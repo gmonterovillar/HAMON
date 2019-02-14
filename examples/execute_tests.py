@@ -16,5 +16,5 @@ for i in range(1, 6):
     command = 'python3 %s/HAMON.py -ea ea_config_ex_%d.py -c opti_config_ex_%d.py' % (main_path, i, i)
     print('Executing command "%s" for test number %d' % (command, i))
     os.system(command)
-    print('removing generated %s and __pycache__ directories...' % (main_path))
-    os.system('rm -r EA_data __pycache__\n\n')
+    print('removing generated __pycache__ directory...')
+    os.system('rm -r __pycache__')

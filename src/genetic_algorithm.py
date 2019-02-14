@@ -169,7 +169,7 @@ class GA:
 
         # Write data base best individual
         bi_file = open(project_name + '_bi.csv', 'w')
-        header = 'Generation, '
+        header = 'Generation'
         for v_name in self._var_names:
             header += ', ' + v_name
         header += '\n'
