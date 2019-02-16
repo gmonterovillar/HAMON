@@ -6,7 +6,7 @@ and Differential Evolution (DE) as the core of the optimization as well as meta-
 
 ## Methodology used
 As previously mentioned HAMON can use GAs and DE together with RBF to solve optimization problems. A detailed 
-description of the methods implemented can be found in the following two publications.
+description of the methods implemented can be found in the following two publications,
 1. Montero Villar, G., Lindblad, D., and Andersson, N., “Multi-Objective Optimization of an Counter Rotating Open Rotor 
 using Evolutionary Algorithms,” 2018 Multidisciplinary Analysis and Optimization Conference, 2018\
 https://research.chalmers.se/en/publication/503802
@@ -34,23 +34,23 @@ range -1 to 1, the input should be: `var_range = [[0., 1.], [-1., 1.]]`.
 * `int_var_indexes`: list containing the indixes of those variable that only accept integer values. If 
 `any_int_var = False` the list can be left empty as it will not be used.
 * `project_name`: name of the project that will be used for writing output files. String variable.
-* `var_names`: list of length `n_var` where each item is a string containing the name of the corresponding the design 
-variable. This names will be used for output generating purposes. If `var_names = []` default names will be used, these 
+* `var_names`: list of length `n_var` where each item is a string containing the name of the corresponding design 
+variable. This names will be used for output generating purposes. If `var_names = []`, default names will be used, these 
 being; 'var_1', 'var_2' ...
 * `of_names`: same as `var_names` but including the names of the objective functions and of length `n_of`. The default 
 naming is 'of_1', 'of_2' ...
-* `lim_var_names`: same as `var_names` and `of_names` but for the contraint variables and of length `n_lim`. The 
+* `lim_var_names`: same as `var_names` and `of_names` but for the constraint variables and of length `n_lim`. The 
 default naming is 'lim_var_1', 'lim_var_2' ...  
 * `lim_range_orig`: true limits of each of the constraints. It must be a list of length `n_lim` where each item is one 
-of these three option depending on the type of constraint. For example in a case with three constraints where the first 
+of these three option depending on the type of constraint. For example in a case with three constraints, where the first 
 one must be lower than zero, the second one greater than 2 and the third one between 1 and 3:\
-`lim_range_orig = [('lower', 0.), ('greater', 2.), (1., 2.)]` 
+`lim_range_orig = [('lower', 0.), ('greater', 2.), (1., 3.)]` 
 * `mod_lim_range`: exact same definition as `lim_range_orig`. These constraints limits will be applied at the beginning 
 of the optimization (in case `range_gen > 0`) with the intention to facilitate the finding of individuals that fullfil 
 all constraints to help the optimization process.
 * `range_gen`: floating point value between 0 and 1. It represents the fraction of total generations that are run by 
 the EA where the constraints will be subjected to `mod_lim_range` instead of `lim_range_orig`.
-* `max_min`: list of length `n_of` where each item must be 'min' or 'max' depending if the corresponding objective 
+* `max_min`: list of length `n_of` where each item must be `'min'` or `'max'` depending if the corresponding objective 
 function is to be minimized or maximized during the optimization process.
 * `analytical_funcs`: boolean variable. If set to `True` the objective functions and functions defining the constrains 
 are evaluated for every individual during every iteration. If set to `False`, meta modeling is used in order to help 
@@ -72,7 +72,7 @@ a comma. If set to `False`, no comparison is done.
 #### When `analytical_funcs = True`:
 The definition of the function(s) that the EA will use to evaluate each individual must be defined inside the same
 file as the aforemetnioned variables (in the provided examples this would be *opti_config_ex_X.py*). In this case
-a function called `getFunctionsAnalytical()` that receives no argument needs to be defined. This function must return
+a function called `getFunctionsAnalytical()` that receives no arguments needs to be defined. This function must return
 either a list containing the objective functions definition, where each item is a callable function in the case 
 where there are no constraints, or a list where the first item is the list containing the callable objective functions 
 and the second item is a list containing the callable constrined definitions. For example:
@@ -101,31 +101,31 @@ or `mod_lim_range` which in this case woudl be `lim_range_orig = ['lower', 0.]`
 #### When `analytical_funcs = False`:
 This means that meta modeling should be used. In this case an additional set of variables together with a function
 must be added to the input file (in the provided examples this would be *opti_config_ex_X.py*), these being:
-* `meta_model_type`: as of now the only supported type of meta modeling is using radial basis functions, so this
+* `meta_model_type`: as of now the only supported type of meta modeling is radial basis functions, so this
 must be set to `'RBF'`
 * `max_opti_loops`: integer variable. Maximum number of optimization loops run.
 * `existing_data_base`: boolean variable. If set to `True` no initial design set will be generated and instead the
-data for existing design will be read from a file. If set to `False` an initial design set is generated by means
-of LHS.
+data for existing designs will be read from a file. If set to `False` an initial design set is generated by means
+of Latin Hypercube Sampling (LHS).
 * `data_base_file`: string variable. Name (with possible path) of the file where the current data base with the 
 information of the known designs is or/and where HAMON will write the information of the evaluated designs.
-* `n_LHS`: integer variable. Number of sampling to use in the construction of the LHS in case `existing_data_base`
+* `n_LHS`: integer variable. Number of samplings to use in the construction of the LHS in case `existing_data_base`
 is set to `False`.
-* `perc_construct`: floatting point variable between 0 and 1. The fraction of known design that will be used for 
+* `perc_construct`: floatting point variable between 0 and 1. The fraction of known designs that will be used for 
 the construction of the RBF. The rest of the designs will be used for the parameter tunning.
 * `basis`: a list where each item is a string representing the name of a basis function that the user wants to
 consider as a possible basis when constructing the RBF. Available from the *scipy* package are: `['multiquadric', 
 'gaussian', 'linear', 'inverse', 'cubic', 'quintic', 'thin_plate']`
 * `eps_scale_range`: floatting point variable. The default epsilon variable used in some of the basis function is
 taken as an approximate of the average distance between nodes. Calling the default epsilon, *e* and taking it as 
-a reference, the tunning is allowed to happen in the interval for epsilon (e*X, e/X), where X is `eps_scale_range`.  
-* `eps_eval`: integer value. Number of times different epsilons are tried for each of the basis functions when
+a reference, the tunning is allowed to happen in the interval for epsilon (e/X, e*X), where X is `eps_scale_range`.  
+* `eps_eval`: integer value. Number of times different epsilons are checked for each of the basis functions when
 tunning the parameteres and basis for the RBF construction.
 
 In this case since `analytical_funcs = False` there is no need to define `getFunctionsAnalytical()` but 
 `evaluateSetOfCases()` instead. This function simply receives the design variables of the designs that need to be
-evaluated and return the result of their evaluation. An example of this function can be taken from
-'examples/multi_objective/test_5/opti_config_ex_5.py` for the ZDT 1 function.
+evaluated and returns the results of their evaluation. An example of this function can be taken from
+`examples/multi_objective/test_5/opti_config_ex_5.py` for the ZDT 1 function.
 ```python
 def evaluateSetOfCases(var_data, n_lim=0):
     successful = []
@@ -146,7 +146,7 @@ not store `True` or `False` based on the constrains. What the values in this lis
 of the corresponding design has been succesfull indepently of its performance. In this example case, it is obvious
 that all the designs will be assigned `True` because there is no way in which the evaluation of the objective functions
 could fail. But lets consider that each of those design evaluation will require a CFD simulation (as it was done in
-[1] and [2] in tne **Methodology used** section). In this case it is possible that some CFD simulations are considered
+[1] and [2] in the **Methodology used** section). In this case it is possible that some CFD simulations are considered
 not succesfull because they did not satisfy a certain convergence criteria for instance, in that case, that particular
 design can be associated with a value of `False` in the `succesfull` list so that it is not included in the RBF
 construction, and hence avoiding contaminating the response surface created by the meta model. 
@@ -159,8 +159,8 @@ found as *ea_config_ex_X.py*, where *X* is the test case number.
 * `pop_size`: integer variable. Size of the population.
 * `n_gen`: integer variable. Number of generations.
 * `mut_rate`: floating point variable between 0 and 1. It defines the mutation rate (this has different applications
-in GA and DE). In case `EA_type = 'GA'`, it can be set to lower than zero to give the defaul value of 
-`mut_rate = 1/(n_gen_var*n_var).
+in GA and DE). In case `EA_type = 'GA'`, it can be set to lower than zero to give a defaul value of 
+`mut_rate = 1/(n_gen_var*n_var)`.
 
 #### Variables needed when using GA:
 * `n_gen_var`: integer variable. Number of genes used to encode each of the design variables.
@@ -169,15 +169,15 @@ in GA and DE). In case `EA_type = 'GA'`, it can be set to lower than zero to giv
 tournament selection process.
 
 #### Variables needed when using DE:
-* `recomb_rate`: floatting point variable between 0 and 1. Set the recombination rate.
+* `recomb_rate`: floatting point variable between 0 and 1. Sets the recombination rate.
 
 #### Variables needed when the problem is multi-objective:
-* `perc_rank1`: floatting point variable between 0 and 1. It set the fraction (upper limit) of individuals with rank
-1 that will be passed from one generation to the next. Values close to 0.9 or 1.0 recommended but it can be an
+* `perc_rank1`: floatting point variable between 0 and 1. It sets the fraction (upper limit) of individuals with rank
+1 that will be passed from one generation to the next. Values close to 0.9 or 1.0 are recommended but it can be an
 option to keep a more diverse population to try and keep some individuals or lower ranks as well. 
-* `perc_nf`: floatting point variable between 0 and 1. It set the fraction (lower limit) of individuals that don't
-fullfil the constraines that will be passed to the next generaion. Values close to 0 recommended but it can be an 
-option to keep a more diverse population to try and keep some individuals that do not satisfy the constrains.
+* `perc_nf`: floatting point variable between 0 and 1. It sets the fraction (lower limit when possible) of individuals
+that don't fullfil the constraines that will be passed to the next generaion. Values close to 0 recommended but it can 
+be an option to keep a more diverse population to try and keep some individuals that do not satisfy the constrains.
 
 #### Variables needed when using RBFs:
 * `n_to_select`: integer variable. Number of individuals to select out of the best found ones by the EA to be 
@@ -189,17 +189,17 @@ to be evaluated will be the Euclidian distance in the design space, whereas if i
 the Euclidian distance in the objective function space.
 
 ## Running HAMON
-In order to run HAMON with the two input files ready:
+In order to run HAMON with the two input files ready execute:
 ```
 $ python3 path_HAMON/HAMON.py -c path_opti_config/opti_config.py -ea path_ea_config/ea_config.py
 ```
 
 ## Output files
 Depending on which type of optimization is being run, different output files will be produced by HAMON. HAMON will 
-generate a directory `EA_data` on the selected working directory. The following files will be generated (here it is 
+generate a directory `EA_data/` on the selected working directory. The following files will be generated (here it is 
 assumed that the given poject name is *proj*):
 ### Single objective optimization
-* **proj_bi.csv**: the part *bi* of the name stand for best individual. This file will be a *csv* file where the best 
+* **proj_bi.csv**: the part *bi* of the name stands for best individual. This file will be a *csv* file where the best 
 found individual's design variables for every generation is stored with the following columns separated by comma 
 (filled here with random values for the design variables)
 
@@ -208,8 +208,8 @@ found individual's design variables for every generation is stored with the foll
 | 1          | 0.23  | 0.435 |
 | 2          | 0.54  | 0.534 |
 
-* **proj_bi_summary.csv**: in this file instead of the design variables the objective function value and constraint
-value (in case there is any)  for every generation's best found individual are stored with the following format (filled
+* **proj_bi_summary.csv**: in this file instead of the design variables, the objective function value and constraint(s)
+value(s) (in case there is any) for every generation's best found individual are stored with the following format (filled
 here with random values)
 
 | Generation | of    | lim_var_1 | lim_var_2 |
@@ -218,8 +218,8 @@ here with random values)
 | 2          | 0.54  | 0.534     | -0.236    |
 
 ### Multi objective optimization
-* **proj_fg.csv**: the part *fg* of the name stand for final generation. This file will be a *csv* file where the design 
- variables of every individual in the last generation is stored with the following columns separated by comma 
+* **proj_fg.csv**: the part *fg* of the name stands for final generation. This file will be a *csv* file where the design 
+ variables of every individual in the last generation are stored with the following columns separated by comma 
 (filled here with random values for the design variables)
 
 | indv | var_1 | var_2 |
@@ -227,8 +227,8 @@ here with random values)
 | 0          | 0.23  | 0.435 |
 | 1          | 0.54  | 0.534 |
 
-* **proj_fg_summary.csv**: in this file instead of the design variables the objective functions value and constraint
-values (in case there is any) for every individual in the last generation, together with their rank in that 
+* **proj_fg_summary.csv**: in this file instead of the design variables, the objective functions values and constraint(s)
+values(s) (in case there is any) for every individual in the last generation, together with their rank in that 
  population and their feasibility are stored with the following format (filled here with random values)
 
 | indv | of_1  | of_2   | lim_var_1 | lim_var_2 | rank | feasible? |
@@ -244,8 +244,8 @@ following format (here filled with random values)
 | 1   | 0.23  | 0.435 |
 | 2   | 0.54  | 0.534 |
 
-* **data_base.csv**: the name *data_base* here will be replaced to the name given in the input file. This file contains
-information of al the designs that have been evaluated using the actual objective function defined in 
+* **data_base.csv**: the name *data_base* here will be replaced with the name given in the input file. This file contains
+information of all the designs that have been evaluated using the actual objective function defined in 
 `evaluateSetOfCases()`. This is also the file that will be used in case the optimization needs to be restarted.
  They are stored with the following format (filled here with random values)
 
@@ -306,6 +306,8 @@ In case any bug or any malfunction on the code is detected, it would be greatly 
 https://github.com/gmonterovillar/HAMON/issues
 
 so that the issue can be taken a look at and hopefully fixed.
+
+Also suggestions and possible improvement for the code are welcome.
 
 ## Credits
 ### Main developer
