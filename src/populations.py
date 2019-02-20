@@ -371,9 +371,31 @@ class PopulationMOEA:
 
         self.population = []
 
-        n_nf = int(perc_nf * self._size)
-        n_rank1 = int(perc_rank1 * self._size)
-        if n_nf + n_rank1 > self._size:
+        desired_n_nf = int(perc_nf * self._size)
+        desired_n_rank1 = int(perc_rank1 * self._size)
+        if desired_n_nf + desired_n_rank1 > self._size:
+            desired_n_nf = self._size - desired_n_rank1
+
+        # Count number of feasibles and number of unfeasibles
+        n_feasibles = 0
+        n_non_feasibles = 0
+        for rank in rank_list_fpq:
+            n_feasibles += len(rank)
+        for rank in rank_list_nfpq:
+            n_non_feasibles += len(rank)
+
+        # Set the correct n_rank1 and n_nf according to what the user wants but taking into account what it is available
+        # The number of individuals requested can be achieved
+        if n_feasibles >= desired_n_rank1 and n_non_feasibles >= desired_n_nf:
+            n_nf = desired_n_nf
+            n_rank1 = desired_n_rank1
+        # Not enough non feasibles
+        elif n_feasibles > desired_n_rank1 and n_non_feasibles < desired_n_nf:
+            n_nf = n_non_feasibles
+            n_rank1 = self._size - n_nf
+        # Not enough feasibles
+        elif n_feasibles < desired_n_rank1 and n_non_feasibles > desired_n_nf:
+            n_rank1 = n_feasibles
             n_nf = self._size - n_rank1
 
         # Make sure that there are enough feasible individuals, if not, request more non feasibles
@@ -399,27 +421,28 @@ class PopulationMOEA:
                     break
 
         # Fill the rest of the population with ranking 1to fill the perc_rank1 criteria if possible
-        crowded_set2 = self.crowdedDistanceOneSet(list(self.populationPQ[j] for j in rank_list_fpq[0]), self._n_of)
-        crowded_set_sorted2 = sorted(crowded_set2, key=lambda x: x.getCrowdedDistance(), reverse=True)
-        if len(crowded_set_sorted2) <= n_rank1:
-            self.population += crowded_set_sorted2
-        else:
-            crowded_set2_trimed = self.crowdedDistanceOneSet(crowded_set_sorted2[:n_rank1], self._n_of)
-            self.population += crowded_set2_trimed
+        if n_rank1 > 0:
+            crowded_set2 = self.crowdedDistanceOneSet(list(self.populationPQ[j] for j in rank_list_fpq[0]), self._n_of)
+            crowded_set_sorted2 = sorted(crowded_set2, key=lambda x: x.getCrowdedDistance(), reverse=True)
+            if len(crowded_set_sorted2) <= n_rank1:
+                self.population += crowded_set_sorted2
+            else:
+                crowded_set2_trimed = self.crowdedDistanceOneSet(crowded_set_sorted2[:n_rank1], self._n_of)
+                self.population += crowded_set2_trimed
 
-        # If needed fill the rest of the population with ranking 2, 3...
-        if len(self.population) < self._size:
-            for rank_I_list in rank_list_fpq[1:]:
-                indv_needed = self._size - len(self.population)
-                crowded_set3 = self.crowdedDistanceOneSet(list(self.populationPQ[j] for j in rank_I_list), self._n_of)
-                crowded_set_sorted3 = sorted(crowded_set3, key=lambda x: x.getCrowdedDistance(), reverse=True)
-                if len(crowded_set_sorted3) <= indv_needed:
-                    self.population += crowded_set_sorted3
-                else:
-                    crowded_set3_trimed = self.crowdedDistanceOneSet(crowded_set_sorted3[:indv_needed], self._n_of)
-                    self.population += crowded_set3_trimed
-                if len(self.population) == self._size:
-                    break
+            # If needed fill the rest of the population with ranking 2, 3...
+            if len(self.population) < self._size:
+                for rank_I_list in rank_list_fpq[1:]:
+                    indv_needed = self._size - len(self.population)
+                    crowded_set3 = self.crowdedDistanceOneSet(list(self.populationPQ[j] for j in rank_I_list), self._n_of)
+                    crowded_set_sorted3 = sorted(crowded_set3, key=lambda x: x.getCrowdedDistance(), reverse=True)
+                    if len(crowded_set_sorted3) <= indv_needed:
+                        self.population += crowded_set_sorted3
+                    else:
+                        crowded_set3_trimed = self.crowdedDistanceOneSet(crowded_set_sorted3[:indv_needed], self._n_of)
+                        self.population += crowded_set3_trimed
+                    if len(self.population) == self._size:
+                        break
 
     def addIndividualWithChromosomeToPopulationQ(self, chromosome):
         """Adds an individual with a specified chromosome"""

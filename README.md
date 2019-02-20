@@ -314,4 +314,4 @@ Also suggestions and possible improvement for the code are welcome.
 * Gonzalo Montero Villar \<villar@chalmers.se\>
 ### Contributors
 * Daniel Lindblad
-* Niklas Andersoon
+* Niklas Andersson
