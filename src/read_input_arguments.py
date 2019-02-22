@@ -1,34 +1,30 @@
 import sys
 
 def getInputArguments(s, verbose=True):
-    option_1 = str(s[1])
-    option_2 = str(s[3])
-    conf_1 = str(s[2])
-    conf_2 = str(s[4])
 
-    conf_given = False
-    conf_ea_given = False
+    conf_file = ''
+    conf_file_ea = ''
+    err = ''
 
-    if option_1 == '-c':
-        conf_file = conf_1
-        conf_given = True
-    elif option_1 == '-ea':
-        conf_file_ea = conf_1
-        conf_ea_given = True
-
-    if option_2 == '-c':
-        conf_file = conf_2
-        conf_given = True
-    elif option_2 == '-ea':
-        conf_file_ea = conf_2
-        conf_ea_given = True
-
-    if conf_ea_given and conf_given:
+    if len(s) != 5:
         if verbose:
-            print('Config file for optimization ', conf_file)
-            print('Config file for EA ', conf_file_ea)
-            print('')
-        return [conf_file, conf_file_ea]
+            err = 'Error in executing HAMON, not enough input arguments'
+        sys.exit(err)
     else:
-        print('Both the config file for the optimization and EA settings are needed')
-        sys.exit()
+        for i in range(1, 4, 2):
+
+            if str(s[i]) == '-c' and str(s[i+1])[-3:] == '.py':
+                conf_file = str(s[i+1])
+            elif str(s[i]) == '-ea' and str(s[i+1])[-3:] == '.py':
+                conf_file_ea = str(s[i+1])
+            else:
+                if verbose:
+                    err = 'Error in executing HAMON, input argument \"' + str(s[i]) + ' ' + str(s[i+1]) + '\" invalid'
+                sys.exit(err)
+
+        if verbose:
+            print('Config file for optimization: ' + conf_file   )
+            print('Config file for EA          : ' + conf_file_ea)
+            print(' ')
+
+        return [conf_file, conf_file_ea]
