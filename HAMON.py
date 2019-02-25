@@ -26,17 +26,18 @@ import differential_evolution as de
 import metamodels
 import sys
 
-[conf_file, conf_file_ea] = ria.getInputArguments(sys.argv)
-dirname_conf, filename_conf = os.path.split(os.path.abspath(conf_file))
-dirname_conf_ea, filename_conf_ea = os.path.split(os.path.abspath(conf_file_ea))
-sys.path.append(dirname_conf)
-sys.path.append(dirname_conf_ea)
-
-conf = __import__(filename_conf[:-3])
-confEA = __import__(filename_conf_ea[:-3])
-
 def main():
     printHeader()
+
+    # get the input files
+    [conf_file, conf_file_ea] = ria.getInputArguments(sys.argv)
+    dirname_conf, filename_conf = os.path.split(os.path.abspath(conf_file))
+    dirname_conf_ea, filename_conf_ea = os.path.split(os.path.abspath(conf_file_ea))
+    sys.path.append(dirname_conf)
+    sys.path.append(dirname_conf_ea)
+
+    conf = __import__(filename_conf[:-3])
+    confEA = __import__(filename_conf_ea[:-3])
 
     # Get the variables from config file
     n_var = conf.n_var
