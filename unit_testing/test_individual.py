@@ -3,10 +3,7 @@ import sys
 import random
 import os
 
-dirname, filename = os.path.split(os.path.abspath(__file__))
-sys.path.append(dirname + '/../src')
-
-import individual
+from src import individual
 
 
 class TestIndividual(unittest.TestCase):

@@ -3,11 +3,7 @@ import sys
 import random
 import os
 
-dirname, filename = os.path.split(os.path.abspath(__file__))
-sys.path.append(dirname + '/../src')
-
-import populations
-
+from src import populations
 
 class TestPopulationGA(unittest.TestCase):
 
