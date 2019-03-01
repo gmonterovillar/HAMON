@@ -193,7 +193,7 @@ def main():
                                                       of_functions, var_data, of_data, lim_range_orig, range_gen,
                                                       lim_functions, mod_lim_range)
 
-            [variables_selected, ofs_selected, lim_selected] = checkConvergence(selected_individuals, of_functions)
+            [variables_selected, ofs_selected, lim_selected] = checkConvergence(selected_individuals, of_functions, conf)
 
             var_data_to_add = []
             of_data_to_add = []
@@ -215,7 +215,7 @@ def main():
     return
 
 
-def checkConvergence(selected_var, of_functions, lim_functions=0):
+def checkConvergence(selected_var, of_functions, conf, lim_functions=0):
     # TODO change this so that it will work with limitations
     """Check the convergence of the meta model"""
     n_of = len(of_functions)
