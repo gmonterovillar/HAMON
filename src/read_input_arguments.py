@@ -6,7 +6,7 @@ def getInputArguments(s, verbose=True):
     conf_file_ea = ''
     err = ''
 
-    if len(s) != 5:
+    if len(s) < 5:
         if verbose:
             err = 'Error in executing HAMON, not enough input arguments'
         sys.exit(err)
