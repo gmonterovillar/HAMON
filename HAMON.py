@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ##================================ HAMON.py ====================================
 
@@ -8,35 +9,37 @@
 # villar@chalmers.se
 # March 2016
 
+##==============================================================================
+
+# Import modules from python
+
 import numpy as np
-import os
 import sys
 import glob
 import re
-
-# import the ./src path so that python can find the modules
 import os
 
-dirname, filename = os.path.split(os.path.abspath(__file__))
-sys.path.append(dirname + '/src')
+# Import modules from HAMON
 
-import read_input_arguments as ria
-import genetic_algorithm as ga
-import differential_evolution as de
-import metamodels
-import sys
+from src import read_input_arguments  as ria
+from src import genetic_algorithm     as ga
+from src import differential_evolution as de
+from src import metamodels
 
-[conf_file, conf_file_ea] = ria.getInputArguments(sys.argv)
-dirname_conf, filename_conf = os.path.split(os.path.abspath(conf_file))
-dirname_conf_ea, filename_conf_ea = os.path.split(os.path.abspath(conf_file_ea))
-sys.path.append(dirname_conf)
-sys.path.append(dirname_conf_ea)
-
-conf = __import__(filename_conf[:-3])
-confEA = __import__(filename_conf_ea[:-3])
+##==============================================================================
 
 def main():
     printHeader()
+
+    [conf_file, conf_file_ea] = ria.getInputArguments(sys.argv)
+    dirname_conf, filename_conf = os.path.split(os.path.abspath(conf_file))
+    dirname_conf_ea, filename_conf_ea = os.path.split(os.path.abspath(conf_file_ea))
+    sys.path.append(dirname_conf)
+    sys.path.append(dirname_conf_ea)
+
+    conf = __import__(filename_conf[:-3])
+    confEA = __import__(filename_conf_ea[:-3])
+
 
     # Get the variables from config file
     n_var = conf.n_var
@@ -123,20 +126,20 @@ def main():
         if confEA.EA_type == 'GA':
             print('Optimizer : NSGA-II (multi-objective GA)')
             optimizer = ga.NSGA_II(var_names, of_names, lim_var_names, n_var, n_of, n_lim, max_min, any_int_var,
-                                   int_var_indexes)
+                                   int_var_indexes, confEA)
         elif confEA.EA_type == 'DE':
             print('Optimizer : multi-objective DE')
             optimizer = de.MODE(var_names, of_names, lim_var_names, n_var, n_of, n_lim, max_min, any_int_var,
-                                int_var_indexes)
+                                int_var_indexes, confEA)
     else:
         if confEA.EA_type == 'GA':
             print('Optimizer : single-objective GA')
             optimizer = ga.GA(var_names, of_names, lim_var_names, n_var, n_lim, max_min, any_int_var,
-                              int_var_indexes)
+                              int_var_indexes, confEA)
         elif confEA.EA_type == 'DE':
             print('Optimizer : single-objective DE')
             optimizer = de.DE(var_names, of_names, lim_var_names, n_var, n_lim, max_min, any_int_var,
-                              int_var_indexes)
+                              int_var_indexes, confEA)
 
     # Get the objective functions and the limiting functions from what has been defined in HAMON_config.py
     if analytical_funcs:

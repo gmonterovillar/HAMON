@@ -1,4 +1,5 @@
-import individual
+from src import individual
+
 import random
 import numpy as np
 
