@@ -40,21 +40,9 @@ def main():
     confEA = __import__(filename_conf_ea[:-3])
 
     # Get the variables from config file
-    n_var = conf.n_var
-    n_of = conf.n_of
-    n_lim = conf.n_lim
-    project_name = conf.project_name
-    var_range = conf.var_range
-    lim_range_orig = conf.lim_range_orig
-    range_gen = conf.range_gen
-    mod_lim_range = conf.mod_lim_range
-    max_min = conf.max_min
-    var_names = conf.var_names
-    of_names = conf.of_names
-    lim_var_names = conf.lim_var_names
-    analytical_funcs = conf.analytical_funcs
-    any_int_var = conf.any_int_var
-    working_directory = conf.working_directory
+    [n_var, n_of, n_lim, project_name, var_range, lim_range_orig, range_gen, mod_lim_range, max_min, var_names,
+     of_names, lim_var_names, analytical_funcs, any_int_var, working_directory, int_var_indexes, plotting, true_pareto]\
+      = ria.getParametersOptiConfig(dirname_conf, filename_conf[:-3])
 
     if not analytical_funcs:
         max_opti_loops = conf.max_opti_loops
@@ -157,7 +145,7 @@ def main():
             [_, perc_feasibles] = optimizer.optimize(EA_path + project_name, var_range, of_functions, var_data, of_data, \
                                lim_range_orig, range_gen, lim_functions, mod_lim_range)
 
-        if conf.plotting:
+        if plotting:
             if n_of == 1:
                 plotSingleObjective(working_directory, project_name, of_names)
             elif n_of == 2:
@@ -191,7 +179,8 @@ def main():
                                                       of_functions, var_data, of_data, lim_range_orig, range_gen,
                                                       lim_functions, mod_lim_range)
 
-            [variables_selected, ofs_selected, lim_selected] = checkConvergence(selected_individuals, of_functions)
+            [variables_selected, ofs_selected, lim_selected] = checkConvergence(selected_individuals, of_functions,
+                                                                                n_lim, conf.evaluateSetOfCases)
 
             var_data_to_add = []
             of_data_to_add = []
@@ -207,13 +196,13 @@ def main():
             print('Writing data base to ' + EA_path + '/' + data_base_file)
             writeDataBase(EA_path + '/' + data_base_file, var_data, [], of_data)
 
-        if conf.plotting:
+        if plotting:
             plotMultiObjectiveMetaModel(working_directory, project_name, of_names, conf.true_pareto, max_opti_loops)
 
     return
 
 
-def checkConvergence(selected_var, of_functions, lim_functions=0):
+def checkConvergence(selected_var, of_functions, lim_functions, evaluateSetOfCases):
     # TODO change this so that it will work with limitations
     """Check the convergence of the meta model"""
     n_of = len(of_functions)
@@ -221,7 +210,7 @@ def checkConvergence(selected_var, of_functions, lim_functions=0):
         n_lim = 0
     else:
         n_lim = len(lim_functions)
-    [variables, ofs, lim, successful] = conf.evaluateSetOfCases(selected_var, n_lim)
+    [variables, ofs, lim, successful] = evaluateSetOfCases(selected_var, n_lim)
     variables_to_check = []
     ofs_to_check = []
     lim_to_check = []

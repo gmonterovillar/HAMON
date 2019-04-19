@@ -10,19 +10,10 @@
 
 print('Minimizing both f1(x) and f2(x) of the TNK function\n')
 
-n_of = 2
-n_var = 2
 var_range = [[0, 3.1415926535]]*2
-n_lim = 2
-any_int_var = False
-int_var_indexes = []
 project_name = 'ex_4'
 var_names = ['x', 'y']
-of_names = []
-lim_var_names = []
 lim_range_orig = [('lower', 0.0)]*2
-range_gen = 0
-mod_lim_range = []
 max_min = ['min', 'min']
 analytical_funcs = True
 working_directory = '.'

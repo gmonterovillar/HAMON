@@ -5,7 +5,7 @@
 # of the TNK using multi-objective constraint Differential Evolution.
 
 EA_type = 'DE'
-pop_size = 60
+pop_size = 70
 n_gen = 200
 mut_rate = 0.5
 recomb_rate = 0.5
