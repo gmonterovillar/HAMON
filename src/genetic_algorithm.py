@@ -134,8 +134,8 @@ class GA:
 
             if self.__found_best:
                 best_fitness_over_iter.append([generation + 1, self._pop.population[self.__best_index].getOf()[0],
-                                               self._pop.population[self.__best_index].getLimVar(),
-                                               self._pop.population[self.__best_index].getVar()])
+                                               self._pop.population[self.__best_index].getLimVar()[:],
+                                               self._pop.population[self.__best_index].getVar()[:]])
 
             # Count amount of feasibles
             perc_feasibles_over_iter.append(self._pop.obtainPercentageOfFeasibles())
@@ -165,7 +165,7 @@ class GA:
         header += '\n'
         bi_file.write(header)
         for i in range(len(best_fitness_over_iter)):
-            str_best = str(best_fitness_over_iter[i][0]) + ', '
+            str_best = str(best_fitness_over_iter[i][0])
             for var in best_fitness_over_iter[i][3]:
                 str_best += ', ' + str(var)
             str_best += '\n'
