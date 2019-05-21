@@ -73,7 +73,7 @@ class Individual:
 
     # TODO check the case where either of, n_lim or n_var is =1 for setting
     def setLimVar(self, lim_var):
-        self._lim_var = lim_var
+        self._lim_var = lim_var[:]
 
     def getOf(self):
         return self._of

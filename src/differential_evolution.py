@@ -1,4 +1,5 @@
 from src import populations
+import numpy as np
 
 import sys
 
@@ -102,8 +103,8 @@ class DE:
             self.__findBest()
             if self.__found_best:
                 best_fitness_over_iter.append([generation + 1, self._pop.population[self.__best_index].getOf()[0],
-                                               self._pop.population[self.__best_index].getLimVar(),
-                                               self._pop.population[self.__best_index].getVar()])
+                                               np.copy(self._pop.population[self.__best_index].getLimVar()),
+                                               np.copy(self._pop.population[self.__best_index].getVar())])
 
             perc_feasibles_over_iter.append(self._pop.obtainPercentageOfFeasibles())
 
@@ -132,7 +133,7 @@ class DE:
         header += '\n'
         bi_file.write(header)
         for i in range(len(best_fitness_over_iter)):
-            str_best = str(best_fitness_over_iter[i][0]) + ', '
+            str_best = str(best_fitness_over_iter[i][0]) 
             for var in best_fitness_over_iter[i][3]:
                 str_best += ', ' + str(var)
             str_best += '\n'
@@ -162,7 +163,7 @@ class DE:
 
     def __updateVarsOfNewGeneration(self, new_population_vars):
         for i in range(self._pop_size):
-            self._pop.population[i].setVars(new_population_vars[i][:])
+            self._pop.population[i].setVars(np.copy(new_population_vars[i]))
 
     def __findBest(self):
         self.__found_best = False
