@@ -24,19 +24,9 @@
 
 print('Minimizing both f1(x) and f2(x) of the ZDT 1 function using RBFs\n')
 
-n_of = 2
-n_var = 30
 var_range = [[0, 1]] * 30
-n_lim = 0
-any_int_var = False
-int_var_indexes = []
 project_name = 'ex_5'
-var_names = []
 of_names = ['f1(x)', 'f2(x)']
-lim_var_names = []
-lim_range_orig = [('greater', 0.0)]
-range_gen = 0
-mod_lim_range = []
 max_min = ['min', 'min']
 analytical_funcs = False
 working_directory = '.'
@@ -48,7 +38,7 @@ meta_model_type = 'RBF'
 max_opti_loops = 5
 data_base_file = 'data_base_ex_5.csv'
 existing_data_base = False
-n_LHS = 250
+n_LHS = 350
 perc_construct = 0.8
 eps_scale_range = 3
 basis = ['multiquadric', 'gaussian', 'linear']

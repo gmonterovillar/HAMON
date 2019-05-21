@@ -11,19 +11,10 @@
 
 print('Minimizing the De Jong’s fifth function. The minimum value is around 0.998004\n')
 
-n_of = 1
-n_var = 2
 var_range = [[-65.536, 65.536], [-65.536, 65.536]]
-n_lim = 0
-any_int_var = False
-int_var_indexes = []
 project_name = 'ex_1'
 var_names = ['x', 'y']
 of_names = ['of_1']
-lim_var_names = []
-lim_range_orig = [('greater', 0.0)]
-range_gen = 0
-mod_lim_range = []
 max_min = ['min']
 analytical_funcs = True
 working_directory = '.'

@@ -12,19 +12,9 @@
 
 print('Minimizing both f1(x) and f2(x) of the ZDT 1 function\n')
 
-n_of = 2
-n_var = 30
 var_range = [[0, 1]]*30
-n_lim = 0
-any_int_var = False
-int_var_indexes = []
 project_name = 'ex_3'
-var_names = []
 of_names = ['f1(x)', 'f2(x)']
-lim_var_names = []
-lim_range_orig = [('greater', 0.0)]
-range_gen = 0
-mod_lim_range = []
 max_min = ['min', 'min']
 analytical_funcs = True
 working_directory = '.'

@@ -8,19 +8,13 @@
 
 print('Minimizing Golinski\'s spped reducer problem. The minimum value is around 2994.4\n')
 
-n_of = 1
-n_var = 7
 var_range = [[2.6, 3.6], [0.7, 0.8], [17.0, 28.0], [7.3, 8.3], [7.3, 8.3], [2.9, 3.9], [5.0, 5.5]]
-n_lim = 11
 any_int_var = True
 int_var_indexes = [2]
 project_name = 'ex_2'
 var_names = ['x_1', 'x_2', 'x_3', 'x_4', 'x_5', 'x_6', 'x_7']
 of_names = ['of_1']
-lim_var_names = []
 lim_range_orig = [('lower', 0.0)]*11
-range_gen = 0
-mod_lim_range = []
 max_min = ['min']
 analytical_funcs = True
 working_directory = '.'
