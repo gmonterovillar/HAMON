@@ -13,6 +13,6 @@ perc_rank1 = 1.0
 perc_nf = 0
 
 # Needed because RBFs are used
-n_to_select = 25
+n_to_select = 35
 type_dist = 0
 compare_w_data = True
