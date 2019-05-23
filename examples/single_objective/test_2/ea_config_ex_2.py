@@ -9,3 +9,4 @@ pop_size = 60
 n_gen = 250
 mut_rate = 0.5
 recomb_rate = 0.5
+mutation_recombination_feasibility = True

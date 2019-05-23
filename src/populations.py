@@ -568,6 +568,8 @@ class PopulationDE(Population):
         super().__init__(pop_size, n_var, n_of, n_lim)
         self._Y = []
         self._Z = []
+        self._mutation_percentages = []
+        self._recombination_percentages = []
 
     def initialize(self, var_range):
         """Initialize parameter vectors of the population with random values. Also initialize Y and Z individuals"""
@@ -595,6 +597,32 @@ class PopulationDE(Population):
             elif self._Y.getVar()[i] > var_range[i][1]:
                 self._Y.setVar((var_range[i][1] + self.population[index].getVar()[i]) / 2., i)
         self._Y.fixIntegerVars(var_range)
+
+    def addMutationPercentage(self):
+        self._mutation_percentages.append(0)
+
+    def checkFeasibilityOfMutationCandidate(self, of_functions, lim_functions, lim_range):
+        if self._n_lim > 0:
+            self._Y.evaluate(of_functions, lim_functions)
+            self._Y.checkFeasibility(lim_range)
+            if self._Y.getFeasibility():
+                self._mutation_percentages[-1] += 100/self._size
+
+    def getMutationFeasibilityHistory(self):
+        return self._mutation_percentages
+
+    def addRecombinationPercentage(self):
+        self._recombination_percentages.append(0)
+
+    def checkFeasibilityOfRecombinationCandidate(self, of_functions, lim_functions, lim_range):
+        if self._n_lim > 0:
+            self._Z.evaluate(of_functions, lim_functions)
+            self._Z.checkFeasibility(lim_range)
+            if self._Z.getFeasibility():
+                self._recombination_percentages[-1] += 100/self._size
+
+    def getRecombinationFeasibilityHistory(self):
+        return self._recombination_percentages
 
     def getCandidateByRecombination(self, index, recomb_rate, var_range):
         ri = random.randint(0, self._n_var - 1)

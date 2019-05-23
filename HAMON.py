@@ -146,6 +146,11 @@ def main():
         else:
             [_, perc_feasibles] = optimizer.optimize(EA_path + project_name, var_range, of_functions, var_data, of_data, \
                                lim_range_orig, range_gen, lim_functions, mod_lim_range)
+            feasibility_file = open(EA_path + project_name + '_feasibility_history.csv', 'w')
+            feasibility_file.write('Generation, \% feasibles\n')
+            for i in range(len(perc_feasibles)):
+                feasibility_file.write('%d, %.3f\n' % (i+1, perc_feasibles[i]))
+            feasibility_file.close()
 
         if plotting:
             if n_of == 1:
@@ -154,6 +159,11 @@ def main():
                 plotMultiObjective(working_directory, project_name, of_names, conf.true_pareto)
             if n_lim > 0:
                 plotFeasibilityHistory(perc_feasibles)
+                if confEA.EA_type == 'DE':
+                    if optimizer.mutation_recombination_feasibility:
+                        plotMutationRecombinationRateFeasibilityHistory(EA_path + project_name +
+                                                                        '_mutation_recombination_feasibility_history.csv')
+
     else:
         meta_model_type = conf.meta_model_type
         var_data_to_add = var_data[:]
@@ -418,6 +428,21 @@ def plotFeasibilityHistory(perc_feasibles):
     plt.title('Feasibility history')
     plt.grid()
     plt.show()
+
+def plotMutationRecombinationRateFeasibilityHistory(file):
+    import matplotlib.pyplot as plt
+
+    mut_rec_feasibility = np.genfromtxt(file, delimiter=',',skip_header=1)
+    plt.figure()
+    plt.plot(mut_rec_feasibility[:, 0], mut_rec_feasibility[:, 1], label='mutation')
+    plt.plot(mut_rec_feasibility[:, 0], mut_rec_feasibility[:, 2], label='recombination')
+    plt.xlabel('Generation number')
+    plt.ylabel('% of feasible individuals generated after')
+    plt.title('Mutation and recombination feasibility history')
+    plt.legend()
+    plt.grid()
+    plt.show()
+
 
 def printHeader():
     #print(

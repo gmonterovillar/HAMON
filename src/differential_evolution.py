@@ -26,6 +26,10 @@ class DE:
         self._n_gen = conf.n_gen
         self._mut_rate = conf.mut_rate
         self._recomb_rate = conf.recomb_rate
+        try:
+            self.mutation_recombination_feasibility = conf.mutation_recombination_feasibility
+        except:
+            self.mutation_recombination_feasibility = False
 
     def optimize(self, project_name, var_range, of_function, var_data, of_data, lim_range_orig, \
                  range_gen, lim_functions, mod_lim_range):
@@ -84,12 +88,26 @@ class DE:
 
             new_population_vars = []
 
+            if self.mutation_recombination_feasibility:
+                self._pop.addMutationPercentage()
+                self._pop.addRecombinationPercentage()
+
             for i in range(int(self._pop_size)):
                 # Generate next generation population by applying mutation, recombination and selection
                 # Mutation
                 self._pop.getCandidateByMutation(i, self._mut_rate, var_range, range(self._pop_size))
+
+                # if required check if new candidate is feasible for exporting statistics
+                if self.mutation_recombination_feasibility:
+                    self._pop.checkFeasibilityOfMutationCandidate(of_function, lim_functions, lim_range)
+
                 # Recombination, ensuring that at least one of the parameters in taken from Y with ri
                 self._pop.getCandidateByRecombination(i, self._recomb_rate, var_range)
+
+                # if required check if new candidate is feasible for exporting statistics
+                if self.mutation_recombination_feasibility:
+                    self._pop.checkFeasibilityOfRecombinationCandidate(of_function, lim_functions, lim_range)
+
                 # Selection
                 new_population_vars.append(self._pop.selection(i, of_function, lim_functions, lim_range, self._max_min))
             # Put the parameter vectors obtained by into the new population and evaluate them
@@ -155,6 +173,15 @@ class DE:
             print(str_best)
         else:
             print('\nNo individual that fulfills all constraints has been found!!\n')
+
+        if self.mutation_recombination_feasibility:
+            mutation_percentages = self._pop.getMutationFeasibilityHistory()
+            recombination_percentages = self._pop.getRecombinationFeasibilityHistory()
+            mut_rec_feasibility_file = open(project_name + '_mutation_recombination_feasibility_history.csv', 'w')
+            mut_rec_feasibility_file.write('Generation, \% feasibles mutation, \% feasibles recombination\n')
+            for i in range(len(mutation_percentages)):
+                mut_rec_feasibility_file.write('%d, %.3f, %.3f\n' % (i + 1, mutation_percentages[i], recombination_percentages[i]))
+            mut_rec_feasibility_file.close()
 
         if self._n_lim > 0:
             return [[], perc_feasibles_over_iter]
